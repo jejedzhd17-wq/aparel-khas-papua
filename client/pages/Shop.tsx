@@ -1,9 +1,13 @@
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Navigation from '@/components/Navigation';
-import { Star, Filter } from 'lucide-react';
+import { Star, ArrowRight } from 'lucide-react';
 
-const CATEGORIES = ['Semua', 'Kaos', 'Hoodie', 'Tas Noken', 'Aksesoris'];
+const CATEGORIES = [
+  { name: 'Kaos', slug: 'kaos', icon: '👕' },
+  { name: 'Hoodie', slug: 'hoodie', icon: '🧥' },
+  { name: 'Tas Noken', slug: 'tas-noken', icon: '👜' },
+  { name: 'Aksesoris', slug: 'aksesoris', icon: '✨' },
+];
 
 const ALL_PRODUCTS = [
   {
@@ -81,13 +85,6 @@ const ALL_PRODUCTS = [
 ];
 
 export default function Shop() {
-  const [selectedCategory, setSelectedCategory] = useState('Semua');
-  const [showMobileFilter, setShowMobileFilter] = useState(false);
-
-  const filteredProducts = selectedCategory === 'Semua'
-    ? ALL_PRODUCTS
-    : ALL_PRODUCTS.filter(p => p.category === selectedCategory);
-
   return (
     <div className="min-h-screen bg-white">
       <Navigation />
@@ -96,7 +93,7 @@ export default function Shop() {
       <section className="bg-gradient-to-r from-primary/10 to-secondary/10 py-8 md:py-12 px-4">
         <div className="max-w-7xl mx-auto">
           <h1 className="text-3xl md:text-4xl font-bold text-foreground font-playfair mb-2">
-            Koleksi Produk
+            Shop
           </h1>
           <p className="text-muted-foreground text-lg">
             Jelajahi koleksi apparel Papua yang eksklusif dan berkualitas
@@ -104,130 +101,91 @@ export default function Shop() {
         </div>
       </section>
 
-      <div className="max-w-7xl mx-auto px-4 py-12">
-        <div className="flex gap-8">
-          {/* Desktop Sidebar Filter */}
-          <div className="hidden md:block w-48 flex-shrink-0">
-            <div className="sticky top-20">
-              <h3 className="font-bold text-lg text-foreground mb-4 flex items-center gap-2">
-                <Filter className="w-5 h-5" />
-                Kategori
-              </h3>
-              <div className="space-y-2">
-                {CATEGORIES.map((category) => (
-                  <button
-                    key={category}
-                    onClick={() => setSelectedCategory(category)}
-                    className={`block w-full text-left px-4 py-2 rounded-lg transition-all duration-200 ${
-                      selectedCategory === category
-                        ? 'bg-primary text-white font-semibold'
-                        : 'text-foreground hover:bg-gray-100'
-                    }`}
-                  >
-                    {category}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Main Content */}
-          <div className="flex-1">
-            {/* Mobile Filter Toggle */}
-            <div className="md:hidden mb-6">
-              <button
-                onClick={() => setShowMobileFilter(!showMobileFilter)}
-                className="w-full flex items-center justify-center gap-2 bg-primary text-white font-semibold py-3 rounded-lg"
+      <div className="max-w-7xl mx-auto px-4 py-12 md:py-16">
+        {/* Category Cards */}
+        <div className="mb-16">
+          <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-8 font-playfair">
+            Telusuri Kategori
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {CATEGORIES.map((category) => (
+              <Link
+                key={category.slug}
+                to={`/category/${category.slug}`}
+                className="group"
               >
-                <Filter className="w-5 h-5" />
-                Kategori
-              </button>
-
-              {showMobileFilter && (
-                <div className="mt-4 space-y-2">
-                  {CATEGORIES.map((category) => (
-                    <button
-                      key={category}
-                      onClick={() => {
-                        setSelectedCategory(category);
-                        setShowMobileFilter(false);
-                      }}
-                      className={`block w-full text-left px-4 py-2 rounded-lg transition-all ${
-                        selectedCategory === category
-                          ? 'bg-primary text-white font-semibold'
-                          : 'text-foreground hover:bg-gray-100'
-                      }`}
-                    >
-                      {category}
-                    </button>
-                  ))}
+                <div className="bg-gradient-to-br from-primary/10 to-secondary/10 rounded-xl p-8 text-center hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 h-full flex flex-col items-center justify-center">
+                  <span className="text-6xl mb-4 group-hover:scale-110 transition-transform">{category.icon}</span>
+                  <h3 className="text-lg font-bold text-foreground mb-2 group-hover:text-primary transition-colors">
+                    {category.name}
+                  </h3>
+                  <span className="inline-flex items-center gap-2 text-primary font-semibold text-sm group-hover:gap-4 transition-all">
+                    Lihat <ArrowRight className="w-4 h-4" />
+                  </span>
                 </div>
-              )}
-            </div>
+              </Link>
+            ))}
+          </div>
+        </div>
 
-            {/* Products Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {filteredProducts.map((product) => (
-                <Link
-                  key={product.id}
-                  to={`/product/${product.id}`}
-                  className="group"
-                >
-                  <div className="bg-white rounded-xl overflow-hidden border border-gray-100 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-                    {/* Product Image */}
-                    <div className="relative h-64 overflow-hidden bg-gray-100">
-                      <img
-                        src={product.image}
-                        alt={product.name}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                      />
-                      <div className="absolute top-3 right-3 bg-primary text-white px-3 py-1 rounded-full text-xs font-semibold">
-                        {product.category}
-                      </div>
-                    </div>
-
-                    {/* Product Info */}
-                    <div className="p-4">
-                      <h3 className="text-lg font-semibold text-foreground mb-2 group-hover:text-primary transition-colors line-clamp-2">
-                        {product.name}
-                      </h3>
-
-                      {/* Rating */}
-                      <div className="flex items-center gap-1 mb-3">
-                        {[...Array(product.rating)].map((_, i) => (
-                          <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                        ))}
-                      </div>
-
-                      {/* Price */}
-                      <div className="flex items-baseline justify-between mb-4">
-                        <span className="text-2xl font-bold text-primary">
-                          Rp {product.price.toLocaleString('id-ID')}
-                        </span>
-                      </div>
-
-                      {/* Add to Cart Button */}
-                      <button className="w-full bg-primary text-white font-semibold py-2 rounded-lg hover:bg-primary/90 transition-colors duration-200">
-                        Lihat Detail
-                      </button>
+        {/* All Products */}
+        <div>
+          <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-8 font-playfair">
+            Semua Produk
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {ALL_PRODUCTS.map((product) => (
+              <Link
+                key={product.id}
+                to={`/product/${product.id}`}
+                className="group"
+              >
+                <div className="bg-white rounded-xl overflow-hidden border border-gray-100 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+                  {/* Product Image */}
+                  <div className="relative h-64 overflow-hidden bg-gray-100">
+                    <img
+                      src={product.image}
+                      alt={product.name}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                    />
+                    <div className="absolute top-3 right-3 bg-primary text-white px-3 py-1 rounded-full text-xs font-semibold">
+                      {product.category}
                     </div>
                   </div>
-                </Link>
-              ))}
-            </div>
 
-            {filteredProducts.length === 0 && (
-              <div className="text-center py-16">
-                <p className="text-muted-foreground text-lg">
-                  Tidak ada produk di kategori ini. Silakan pilih kategori lain.
-                </p>
-              </div>
-            )}
+                  {/* Product Info */}
+                  <div className="p-4">
+                    <h3 className="text-lg font-semibold text-foreground mb-2 group-hover:text-primary transition-colors line-clamp-2">
+                      {product.name}
+                    </h3>
 
-            {/* Results Count */}
-            <div className="mt-12 text-center text-muted-foreground">
-              <p>Menampilkan {filteredProducts.length} produk</p>
-            </div>
+                    {/* Rating */}
+                    <div className="flex items-center gap-1 mb-3">
+                      {[...Array(product.rating)].map((_, i) => (
+                        <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                      ))}
+                    </div>
+
+                    {/* Price */}
+                    <div className="flex items-baseline justify-between mb-4">
+                      <span className="text-2xl font-bold text-primary">
+                        Rp {product.price.toLocaleString('id-ID')}
+                      </span>
+                    </div>
+
+                    {/* View Button */}
+                    <button className="w-full bg-primary text-white font-semibold py-2 rounded-lg hover:bg-primary/90 transition-colors duration-200">
+                      Lihat Detail
+                    </button>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+
+          {/* Results Count */}
+          <div className="mt-12 text-center text-muted-foreground">
+            <p>Menampilkan {ALL_PRODUCTS.length} produk</p>
           </div>
         </div>
       </div>
