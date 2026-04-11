@@ -1,7 +1,8 @@
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import Navigation from '@/components/Navigation';
-import { Star, Heart, Share2, ShoppingCart } from 'lucide-react';
+import { Star, Heart, Share2, ShoppingCart, Check } from 'lucide-react';
 import { useState } from 'react';
+import { useCart } from '@/context/CartContext';
 
 const PRODUCTS = {
   1: {
@@ -111,9 +112,28 @@ Cara Penggunaan:
 
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { addToCart } = useCart();
   const product = PRODUCTS[id as keyof typeof PRODUCTS];
   const [quantity, setQuantity] = useState(1);
   const [selectedSize, setSelectedSize] = useState(product?.sizes[0] || 'One Size');
+  const [addedToCart, setAddedToCart] = useState(false);
+
+  const handleAddToCart = () => {
+    if (product) {
+      addToCart({
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        image: product.image,
+        category: product.category,
+        quantity,
+        size: selectedSize,
+      });
+      setAddedToCart(true);
+      setTimeout(() => setAddedToCart(false), 2000);
+    }
+  };
 
   if (!product) {
     return (
@@ -234,9 +254,25 @@ export default function ProductDetail() {
 
             {/* Buttons */}
             <div className="flex gap-4 mb-8">
-              <button className="flex-1 bg-primary text-white font-semibold py-4 rounded-lg hover:bg-primary/90 transition-all duration-200 flex items-center justify-center gap-2">
-                <ShoppingCart className="w-5 h-5" />
-                Tambah ke Keranjang
+              <button
+                onClick={handleAddToCart}
+                className={`flex-1 font-semibold py-4 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 ${
+                  addedToCart
+                    ? 'bg-green-600 text-white'
+                    : 'bg-primary text-white hover:bg-primary/90'
+                }`}
+              >
+                {addedToCart ? (
+                  <>
+                    <Check className="w-5 h-5" />
+                    Ditambahkan ke Keranjang
+                  </>
+                ) : (
+                  <>
+                    <ShoppingCart className="w-5 h-5" />
+                    Tambah ke Keranjang
+                  </>
+                )}
               </button>
               <button className="px-6 py-4 border-2 border-gray-300 rounded-lg hover:border-primary transition-colors">
                 <Heart className="w-5 h-5 text-foreground hover:text-primary transition-colors" />

@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
+import { useState } from 'react';
 import Navigation from '@/components/Navigation';
-import { Star, ArrowRight } from 'lucide-react';
+import { Star, ArrowRight, Search } from 'lucide-react';
 
 const CATEGORIES = [
   { name: 'Kaos', slug: 'kaos', icon: '👕' },
@@ -85,6 +86,13 @@ const ALL_PRODUCTS = [
 ];
 
 export default function Shop() {
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredProducts = ALL_PRODUCTS.filter(product =>
+    product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    product.category.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <div className="min-h-screen bg-white">
       <Navigation />
@@ -95,9 +103,21 @@ export default function Shop() {
           <h1 className="text-3xl md:text-4xl font-bold text-foreground font-playfair mb-2">
             Shop
           </h1>
-          <p className="text-muted-foreground text-lg">
+          <p className="text-muted-foreground text-lg mb-6">
             Jelajahi koleksi apparel Papua yang eksklusif dan berkualitas
           </p>
+
+          {/* Search Bar */}
+          <div className="relative max-w-md">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder="Cari produk..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+          </div>
         </div>
       </section>
 
@@ -130,11 +150,21 @@ export default function Shop() {
 
         {/* All Products */}
         <div>
-          <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-8 font-playfair">
-            Semua Produk
-          </h2>
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-2xl md:text-3xl font-bold text-foreground font-playfair">
+              {searchQuery ? 'Hasil Pencarian' : 'Semua Produk'}
+            </h2>
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="text-primary hover:underline text-sm font-semibold"
+              >
+                Reset
+              </button>
+            )}
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {ALL_PRODUCTS.map((product) => (
+            {filteredProducts.map((product) => (
               <Link
                 key={product.id}
                 to={`/product/${product.id}`}
@@ -183,10 +213,27 @@ export default function Shop() {
             ))}
           </div>
 
+          {/* Empty State */}
+          {filteredProducts.length === 0 && (
+            <div className="text-center py-16">
+              <p className="text-muted-foreground text-lg mb-4">
+                Tidak ada produk yang sesuai dengan pencarian Anda
+              </p>
+              <button
+                onClick={() => setSearchQuery('')}
+                className="text-primary hover:underline font-semibold"
+              >
+                Lihat Semua Produk
+              </button>
+            </div>
+          )}
+
           {/* Results Count */}
-          <div className="mt-12 text-center text-muted-foreground">
-            <p>Menampilkan {ALL_PRODUCTS.length} produk</p>
-          </div>
+          {filteredProducts.length > 0 && (
+            <div className="mt-12 text-center text-muted-foreground">
+              <p>Menampilkan {filteredProducts.length} produk {searchQuery && `untuk "${searchQuery}"`}</p>
+            </div>
+          )}
         </div>
       </div>
     </div>
