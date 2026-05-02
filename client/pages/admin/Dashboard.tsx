@@ -1,223 +1,270 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { LogOut, Package, ShoppingCart, DollarSign, Menu, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import AdminLayout from '@/components/AdminLayout';
+import { Package, ShoppingCart, DollarSign, Clock, TrendingUp, Users } from 'lucide-react';
 
-interface AdminUser {
-  email: string;
-  role: string;
+interface StatCard {
+  title: string;
+  value: string | number;
+  icon: React.ReactNode;
+  color: string;
+  bgColor: string;
+}
+
+interface RecentOrder {
+  id: string;
+  customer: string;
+  total: number;
+  status: 'pending' | 'paid' | 'shipped' | 'completed';
+  date: string;
 }
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
-  const [admin, setAdmin] = useState<AdminUser | null>(null);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [stats, setStats] = useState({
-    totalProducts: 8,
-    totalOrders: 0,
-    totalRevenue: 0,
-  });
+  const [stats, setStats] = useState<StatCard[]>([]);
+  const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([]);
+  const [chartData, setChartData] = useState<any>(null);
 
   useEffect(() => {
+    // Check if admin is logged in
     const savedAdmin = localStorage.getItem('noken-admin');
     if (!savedAdmin) {
       navigate('/admin/login');
       return;
     }
-    setAdmin(JSON.parse(savedAdmin));
 
-    // Load orders from localStorage
-    let ordersCount = 0;
-    let totalRevenue = 0;
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key?.startsWith('order-')) {
-        const order = JSON.parse(localStorage.getItem(key) || '{}');
-        ordersCount++;
-        totalRevenue += order.total || 0;
-      }
-    }
-    setStats(prev => ({
-      ...prev,
-      totalOrders: ordersCount,
-      totalRevenue: totalRevenue,
-    }));
+    // Load dashboard data
+    loadDashboardData();
   }, [navigate]);
 
-  const handleLogout = () => {
-    localStorage.removeItem('noken-admin');
-    navigate('/admin/login');
+  const loadDashboardData = () => {
+    // Mock stats
+    const mockStats: StatCard[] = [
+      {
+        title: 'Total Products',
+        value: '48',
+        icon: <Package className="w-6 h-6" />,
+        color: 'text-primary',
+        bgColor: 'bg-primary/10',
+      },
+      {
+        title: 'Total Orders',
+        value: '156',
+        icon: <ShoppingCart className="w-6 h-6" />,
+        color: 'text-blue-600',
+        bgColor: 'bg-blue-100',
+      },
+      {
+        title: 'Total Revenue',
+        value: 'Rp 45.2M',
+        icon: <DollarSign className="w-6 h-6" />,
+        color: 'text-green-600',
+        bgColor: 'bg-green-100',
+      },
+      {
+        title: 'Pending Orders',
+        value: '12',
+        icon: <Clock className="w-6 h-6" />,
+        color: 'text-yellow-600',
+        bgColor: 'bg-yellow-100',
+      },
+    ];
+
+    const mockOrders: RecentOrder[] = [
+      {
+        id: 'ORD-001',
+        customer: 'Budi Santoso',
+        total: 450000,
+        status: 'completed',
+        date: '2024-01-20',
+      },
+      {
+        id: 'ORD-002',
+        customer: 'Siti Nurhaliza',
+        total: 899000,
+        status: 'shipped',
+        date: '2024-01-19',
+      },
+      {
+        id: 'ORD-003',
+        customer: 'Ahmad Wijaya',
+        total: 299000,
+        status: 'paid',
+        date: '2024-01-18',
+      },
+      {
+        id: 'ORD-004',
+        customer: 'Dewi Lestari',
+        total: 599000,
+        status: 'pending',
+        date: '2024-01-17',
+      },
+      {
+        id: 'ORD-005',
+        customer: 'Rinto Harahap',
+        total: 1200000,
+        status: 'completed',
+        date: '2024-01-16',
+      },
+    ];
+
+    setStats(mockStats);
+    setRecentOrders(mockOrders);
   };
 
-  if (!admin) {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
-  }
+  const statusBadgeColor = (status: string) => {
+    const colors: Record<string, string> = {
+      pending: 'bg-yellow-100 text-yellow-800',
+      paid: 'bg-blue-100 text-blue-800',
+      shipped: 'bg-purple-100 text-purple-800',
+      completed: 'bg-green-100 text-green-800',
+    };
+    return colors[status] || 'bg-gray-100 text-gray-800';
+  };
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      {/* Header */}
-      <header className="bg-white shadow">
-        <div className="flex items-center justify-between px-4 py-4 md:px-8">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="md:hidden p-2 hover:bg-gray-100 rounded-lg"
-            >
-              {sidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
-            <div>
-              <h1 className="text-xl font-bold text-foreground font-playfair">
-                Admin Panel
-              </h1>
-              <p className="text-xs text-muted-foreground">Noken Papua Store</p>
+    <AdminLayout title="Dashboard" description="Welcome to your admin dashboard">
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {stats.map((stat, idx) => (
+          <div
+            key={idx}
+            className={`${stat.bgColor} rounded-lg p-6 border border-gray-200`}
+          >
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-gray-600 text-sm font-medium mb-1">{stat.title}</p>
+                <p className="text-3xl font-bold text-gray-900">{stat.value}</p>
+              </div>
+              <div className={`${stat.color}`}>{stat.icon}</div>
             </div>
           </div>
+        ))}
+      </div>
 
-          <div className="flex items-center gap-4">
-            <div className="text-right hidden md:block">
-              <p className="text-sm font-semibold text-foreground">{admin.email}</p>
-              <p className="text-xs text-muted-foreground">Administrator</p>
+      {/* Charts & Tables Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Chart */}
+        <div className="lg:col-span-2 bg-white rounded-lg shadow p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+              <TrendingUp className="w-5 h-5" />
+              Orders Trend (Last 7 Days)
+            </h2>
+          </div>
+
+          {/* Simple bar chart visualization */}
+          <div className="h-64 flex items-end justify-around gap-2 bg-gray-50 p-4 rounded-lg">
+            {[45, 52, 48, 61, 55, 67, 72].map((value, idx) => (
+              <div
+                key={idx}
+                className="flex flex-col items-center flex-1"
+                style={{ height: '100%' }}
+              >
+                <div
+                  className="w-full bg-gradient-to-t from-primary to-primary/50 rounded-t-lg transition-all"
+                  style={{ height: `${(value / 100) * 100}%` }}
+                />
+                <span className="text-xs text-gray-600 mt-2">Day {idx + 1}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-4 grid grid-cols-3 gap-4 text-center text-sm">
+            <div>
+              <p className="text-gray-600">Total Orders</p>
+              <p className="text-xl font-bold text-gray-900">400</p>
             </div>
-            <button
-              onClick={handleLogout}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-muted-foreground hover:text-red-600"
-            >
-              <LogOut className="w-6 h-6" />
-            </button>
+            <div>
+              <p className="text-gray-600">Avg Orders/Day</p>
+              <p className="text-xl font-bold text-gray-900">57</p>
+            </div>
+            <div>
+              <p className="text-gray-600">Growth</p>
+              <p className="text-xl font-bold text-green-600">+18%</p>
+            </div>
           </div>
         </div>
-      </header>
 
-      <div className="flex min-h-[calc(100vh-64px)]">
-        {/* Sidebar */}
-        <aside
-          className={`${
-            sidebarOpen ? 'block' : 'hidden'
-          } md:block w-64 bg-white shadow-lg p-6 md:fixed md:h-[calc(100vh-64px)] md:overflow-y-auto`}
-        >
-          <nav className="space-y-2">
-            <Link
-              to="/admin/dashboard"
-              className="block px-4 py-3 rounded-lg bg-primary text-white font-semibold transition-colors"
-            >
-              Dashboard
-            </Link>
-            <Link
-              to="/admin/products"
-              className="block px-4 py-3 rounded-lg text-foreground hover:bg-gray-100 transition-colors font-semibold"
-            >
-              Produk
-            </Link>
-            <Link
-              to="/admin/orders"
-              className="block px-4 py-3 rounded-lg text-foreground hover:bg-gray-100 transition-colors font-semibold"
-            >
-              Pesanan
-            </Link>
-          </nav>
-        </aside>
-
-        {/* Main Content */}
-        <main className="flex-1 md:ml-64 p-4 md:p-8">
-          <div className="max-w-6xl mx-auto">
-            {/* Welcome */}
-            <div className="mb-8">
-              <h2 className="text-3xl font-bold text-foreground font-playfair mb-2">
-                Selamat Datang, {admin.email.split('@')[0]}
-              </h2>
-              <p className="text-muted-foreground">
-                Kelola toko Anda dari sini
-              </p>
-            </div>
-
-            {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-              {/* Total Products */}
-              <div className="bg-white rounded-lg shadow p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-muted-foreground text-sm font-semibold mb-1">
-                      Total Produk
-                    </p>
-                    <p className="text-3xl font-bold text-foreground">
-                      {stats.totalProducts}
-                    </p>
-                  </div>
-                  <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
-                    <Package className="w-6 h-6 text-primary" />
+        {/* Top Products */}
+        <div className="bg-white rounded-lg shadow p-6">
+          <h2 className="text-lg font-bold text-gray-900 mb-6">Top Products</h2>
+          <div className="space-y-4">
+            {[
+              { name: 'Kaos Raja Ampat', sales: 145 },
+              { name: 'Hoodie Papua', sales: 98 },
+              { name: 'Tas Noken', sales: 87 },
+              { name: 'Gelang Tradisional', sales: 62 },
+            ].map((product, idx) => (
+              <div key={idx} className="flex items-center justify-between">
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-900">{product.name}</p>
+                  <div className="mt-1 w-full bg-gray-200 rounded-full h-2">
+                    <div
+                      className="bg-primary rounded-full h-2"
+                      style={{ width: `${(product.sales / 150) * 100}%` }}
+                    />
                   </div>
                 </div>
-              </div>
-
-              {/* Total Orders */}
-              <div className="bg-white rounded-lg shadow p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-muted-foreground text-sm font-semibold mb-1">
-                      Total Pesanan
-                    </p>
-                    <p className="text-3xl font-bold text-foreground">
-                      {stats.totalOrders}
-                    </p>
-                  </div>
-                  <div className="w-12 h-12 bg-secondary/10 rounded-lg flex items-center justify-center">
-                    <ShoppingCart className="w-6 h-6 text-secondary" />
-                  </div>
-                </div>
-              </div>
-
-              {/* Total Revenue */}
-              <div className="bg-white rounded-lg shadow p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-muted-foreground text-sm font-semibold mb-1">
-                      Total Pendapatan
-                    </p>
-                    <p className="text-3xl font-bold text-foreground">
-                      Rp {stats.totalRevenue.toLocaleString('id-ID')}
-                    </p>
-                  </div>
-                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                    <DollarSign className="w-6 h-6 text-green-600" />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Quick Actions */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-white rounded-lg shadow p-6">
-                <h3 className="text-lg font-bold text-foreground mb-4 font-playfair">
-                  Manajemen Produk
-                </h3>
-                <p className="text-muted-foreground text-sm mb-4">
-                  Tambah, edit, atau hapus produk dari katalog Anda.
+                <p className="ml-4 text-sm font-semibold text-gray-900 whitespace-nowrap">
+                  {product.sales}
                 </p>
-                <Link
-                  to="/admin/products"
-                  className="inline-block bg-primary text-white font-semibold px-6 py-2 rounded-lg hover:bg-primary/90 transition-colors"
-                >
-                  Kelola Produk
-                </Link>
               </div>
-
-              <div className="bg-white rounded-lg shadow p-6">
-                <h3 className="text-lg font-bold text-foreground mb-4 font-playfair">
-                  Manajemen Pesanan
-                </h3>
-                <p className="text-muted-foreground text-sm mb-4">
-                  Lihat dan proses pesanan pelanggan.
-                </p>
-                <Link
-                  to="/admin/orders"
-                  className="inline-block bg-secondary text-white font-semibold px-6 py-2 rounded-lg hover:bg-secondary/90 transition-colors"
-                >
-                  Lihat Pesanan
-                </Link>
-              </div>
-            </div>
+            ))}
           </div>
-        </main>
+        </div>
       </div>
-    </div>
+
+      {/* Recent Orders */}
+      <div className="mt-8 bg-white rounded-lg shadow p-6">
+        <h2 className="text-lg font-bold text-gray-900 mb-6">Recent Orders</h2>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-gray-200">
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-900">
+                  Order ID
+                </th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-900">
+                  Customer
+                </th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-900">
+                  Total
+                </th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-900">
+                  Status
+                </th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-900">
+                  Date
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              {recentOrders.map((order) => (
+                <tr key={order.id} className="hover:bg-gray-50">
+                  <td className="px-4 py-3 text-sm font-medium text-gray-900">
+                    {order.id}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-600">{order.customer}</td>
+                  <td className="px-4 py-3 text-sm font-semibold text-gray-900">
+                    Rp {order.total.toLocaleString('id-ID')}
+                  </td>
+                  <td className="px-4 py-3">
+                    <span
+                      className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${statusBadgeColor(
+                        order.status
+                      )}`}
+                    >
+                      {order.status}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-600">{order.date}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </AdminLayout>
   );
 }
