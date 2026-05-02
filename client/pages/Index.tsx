@@ -248,7 +248,6 @@ export default function Index() {
               <h4 className="font-semibold mb-4">Perusahaan</h4>
               <ul className="space-y-2 text-sm text-white/70">
                 <li><Link to="/about" className="hover:text-white transition">Tentang Kami</Link></li>
-                <li><Link to="/reviews" className="hover:text-white transition">Review Produk</Link></li>
                 <li><Link to="/contact" className="hover:text-white transition">Hubungi Kami</Link></li>
               </ul>
             </div>

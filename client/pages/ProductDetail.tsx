@@ -1,7 +1,9 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import Navigation from '@/components/Navigation';
+import ReviewList from '@/components/ReviewList';
+import ReviewForm from '@/components/ReviewForm';
 import { Star, Heart, Share2, ShoppingCart, Check } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useCart } from '@/context/CartContext';
 
 const PRODUCTS = {
@@ -118,6 +120,8 @@ export default function ProductDetail() {
   const [quantity, setQuantity] = useState(1);
   const [selectedSize, setSelectedSize] = useState(product?.sizes[0] || 'One Size');
   const [addedToCart, setAddedToCart] = useState(false);
+  const [reviewRefreshTrigger, setReviewRefreshTrigger] = useState(0);
+  const reviewsRef = useRef<HTMLDivElement>(null);
 
   const handleAddToCart = () => {
     if (product) {
@@ -133,6 +137,16 @@ export default function ProductDetail() {
       setAddedToCart(true);
       setTimeout(() => setAddedToCart(false), 2000);
     }
+  };
+
+  const handleReviewSubmitSuccess = () => {
+    // Refresh reviews
+    setReviewRefreshTrigger(prev => prev + 1);
+
+    // Scroll to reviews section
+    setTimeout(() => {
+      reviewsRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, 500);
   };
 
   if (!product) {
@@ -310,7 +324,7 @@ export default function ProductDetail() {
         </div>
 
         {/* Full Description */}
-        <div className="mt-16 border-t border-gray-200 pt-12">
+        <div className="mt-16 border-t border-gray-200 pt-12 mb-16">
           <h2 className="text-2xl font-bold text-foreground mb-6 font-playfair">
             Detail Lengkap
           </h2>
@@ -318,6 +332,31 @@ export default function ProductDetail() {
             <p className="text-muted-foreground whitespace-pre-line leading-relaxed">
               {product.fullDescription}
             </p>
+          </div>
+        </div>
+
+        {/* Customer Reviews Section */}
+        <div ref={reviewsRef} className="border-t border-gray-200 pt-12">
+          <h2 className="text-2xl font-bold text-foreground mb-8 font-playfair">
+            Review Pelanggan
+          </h2>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Review Form */}
+            <div className="lg:col-span-1">
+              <ReviewForm
+                productId={product.id}
+                onSubmitSuccess={handleReviewSubmitSuccess}
+              />
+            </div>
+
+            {/* Review List */}
+            <div className="lg:col-span-2">
+              <ReviewList
+                productId={product.id}
+                refreshTrigger={reviewRefreshTrigger}
+              />
+            </div>
           </div>
         </div>
       </div>

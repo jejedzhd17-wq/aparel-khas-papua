@@ -35,7 +35,6 @@ export default function Navigation() {
   const navLinks = [
     { href: '/', label: 'Home' },
     { href: '/shop', label: 'Shop' },
-    { href: '/reviews', label: 'Reviews' },
     { href: '/shipment-tracking', label: 'Track' },
     { href: '/about', label: 'About' },
     { href: '/contact', label: 'Contact' },
