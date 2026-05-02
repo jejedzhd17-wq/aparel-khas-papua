@@ -3,7 +3,7 @@ import Navigation from '@/components/Navigation';
 import ReviewList from '@/components/ReviewList';
 import ReviewForm from '@/components/ReviewForm';
 import { Star, Heart, Share2, ShoppingCart, Check } from 'lucide-react';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useCart } from '@/context/CartContext';
 
 const PRODUCTS = {
@@ -117,11 +117,20 @@ export default function ProductDetail() {
   const navigate = useNavigate();
   const { addToCart } = useCart();
   const product = PRODUCTS[id as keyof typeof PRODUCTS];
+
+  // Initialize all hooks at the top level, unconditionally
   const [quantity, setQuantity] = useState(1);
-  const [selectedSize, setSelectedSize] = useState(product?.sizes[0] || 'One Size');
+  const [selectedSize, setSelectedSize] = useState('One Size');
   const [addedToCart, setAddedToCart] = useState(false);
   const [reviewRefreshTrigger, setReviewRefreshTrigger] = useState(0);
   const reviewsRef = useRef<HTMLDivElement>(null);
+
+  // Update selected size when product changes
+  useEffect(() => {
+    if (product && product.sizes.length > 0) {
+      setSelectedSize(product.sizes[0]);
+    }
+  }, [product?.id]);
 
   const handleAddToCart = () => {
     if (product) {
