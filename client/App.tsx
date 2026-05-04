@@ -19,7 +19,11 @@ import Register from "./pages/auth/Register";
 import AdminLogin from "./pages/admin/Login";
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminProducts from "./pages/admin/Products";
+import AdminCategories from "./pages/admin/Categories";
 import AdminOrders from "./pages/admin/Orders";
+import AdminShipments from "./pages/admin/Shipments";
+import AdminReviews from "./pages/admin/Reviews";
+import AdminUsers from "./pages/admin/Users";
 import ShipmentTracking from "./pages/ShipmentTracking";
 import NotFound from "./pages/NotFound";
 
@@ -47,10 +51,14 @@ const App = () => (
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/admin/login" element={<AdminLogin />} />
-              <Route path="/admin/dashboard" element={<AdminDashboard />} />
-              <Route path="/admin/products" element={<AdminProducts />} />
-              <Route path="/admin/orders" element={<AdminOrders />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            <Route path="/admin/products" element={<AdminProducts />} />
+            <Route path="/admin/categories" element={<AdminCategories />} />
+            <Route path="/admin/orders" element={<AdminOrders />} />
+            <Route path="/admin/shipments" element={<AdminShipments />} />
+            <Route path="/admin/reviews" element={<AdminReviews />} />
+            <Route path="/admin/users" element={<AdminUsers />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

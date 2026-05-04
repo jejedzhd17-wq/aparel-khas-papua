@@ -1,23 +1,24 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { LogOut, Eye, CheckCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import AdminLayout from '@/components/AdminLayout';
+import AdminTable from '@/components/AdminTable';
+import AdminModal from '@/components/AdminModal';
 
 interface Order {
   id: string;
-  customer: {
-    fullName: string;
-    email: string;
-    phone: string;
-  };
+  customer: string;
   total: number;
-  status: string;
-  timestamp: string;
+  status: 'pending' | 'paid' | 'shipped' | 'completed';
+  date: string;
 }
 
 export default function AdminOrders() {
   const navigate = useNavigate();
   const [orders, setOrders] = useState<Order[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [newStatus, setNewStatus] = useState('');
 
   useEffect(() => {
     const savedAdmin = localStorage.getItem('noken-admin');
@@ -26,212 +27,127 @@ export default function AdminOrders() {
       return;
     }
 
-    // Load orders from localStorage
-    const loadedOrders: Order[] = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key?.startsWith('order-')) {
-        const orderData = JSON.parse(localStorage.getItem(key) || '{}');
-        loadedOrders.push({
-          id: key.replace('order-', ''),
-          customer: orderData.customer,
-          total: orderData.total,
-          status: 'pending',
-          timestamp: orderData.timestamp,
-        });
-      }
-    }
-    setOrders(loadedOrders.reverse());
+    loadOrders();
   }, [navigate]);
 
-  const handleUpdateStatus = (orderId: string, newStatus: string) => {
-    setOrders(orders.map(order =>
-      order.id === orderId ? { ...order, status: newStatus } : order
-    ));
-    setSelectedOrder(selectedOrder && selectedOrder.id === orderId
-      ? { ...selectedOrder, status: newStatus }
-      : selectedOrder
-    );
+  const loadOrders = () => {
+    setIsLoading(true);
+    setTimeout(() => {
+      setOrders([
+        { id: 'ORD-001', customer: 'Budi Santoso', total: 450000, status: 'completed', date: '2024-01-20' },
+        { id: 'ORD-002', customer: 'Siti Nurhaliza', total: 899000, status: 'shipped', date: '2024-01-19' },
+        { id: 'ORD-003', customer: 'Ahmad Wijaya', total: 299000, status: 'paid', date: '2024-01-18' },
+        { id: 'ORD-004', customer: 'Dewi Lestari', total: 599000, status: 'pending', date: '2024-01-17' },
+        { id: 'ORD-005', customer: 'Rinto Harahap', total: 1200000, status: 'completed', date: '2024-01-16' },
+      ]);
+      setIsLoading(false);
+    }, 500);
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('noken-admin');
-    navigate('/admin/login');
+  const handleStatusUpdate = (order: Order) => {
+    setSelectedOrder(order);
+    setNewStatus(order.status);
+    setShowModal(true);
   };
+
+  const submitStatusUpdate = () => {
+    if (selectedOrder) {
+      setOrders(
+        orders.map((o) =>
+          o.id === selectedOrder.id ? { ...o, status: newStatus as Order['status'] } : o
+        )
+      );
+      setShowModal(false);
+      setSelectedOrder(null);
+    }
+  };
+
+  const statusBadgeColor = (status: string) => {
+    const colors: Record<string, string> = {
+      pending: 'bg-yellow-100 text-yellow-800',
+      paid: 'bg-blue-100 text-blue-800',
+      shipped: 'bg-purple-100 text-purple-800',
+      completed: 'bg-green-100 text-green-800',
+    };
+    return colors[status] || 'bg-gray-100 text-gray-800';
+  };
+
+  const columns = [
+    { key: 'id' as const, label: 'Order ID' },
+    { key: 'customer' as const, label: 'Customer' },
+    {
+      key: 'total' as const,
+      label: 'Total',
+      render: (value: number) => `Rp ${value.toLocaleString('id-ID')}`,
+    },
+    {
+      key: 'status' as const,
+      label: 'Status',
+      render: (value: string) => (
+        <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${statusBadgeColor(value)}`}>
+          {value}
+        </span>
+      ),
+    },
+    { key: 'date' as const, label: 'Date' },
+  ];
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      {/* Header */}
-      <header className="bg-white shadow">
-        <div className="flex items-center justify-between px-4 py-4 md:px-8 max-w-7xl mx-auto">
-          <Link to="/admin/dashboard" className="text-xl font-bold text-foreground font-playfair">
-            Admin Panel
-          </Link>
-          <button
-            onClick={handleLogout}
-            className="p-2 hover:bg-gray-100 rounded-lg text-muted-foreground hover:text-red-600"
-          >
-            <LogOut className="w-6 h-6" />
-          </button>
-        </div>
-      </header>
+    <AdminLayout title="Orders" description="Manage customer orders">
+      <div className="mb-6">
+        <h2 className="text-lg font-semibold text-gray-900">Order List</h2>
+        <p className="text-sm text-gray-600">Total: {orders.length} orders</p>
+      </div>
 
-      <main className="max-w-7xl mx-auto p-4 md:p-8">
-        {/* Breadcrumb & Title */}
-        <div className="mb-8">
-          <Link to="/admin/dashboard" className="text-primary hover:underline text-sm mb-2 inline-block">
-            ← Dashboard
-          </Link>
-          <h1 className="text-3xl font-bold text-foreground font-playfair mb-2">
-            Manajemen Pesanan
-          </h1>
-          <p className="text-muted-foreground">
-            Total {orders.length} pesanan
-          </p>
-        </div>
+      <AdminTable
+        columns={columns}
+        data={orders}
+        isLoading={isLoading}
+        onEdit={handleStatusUpdate}
+      />
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Orders List */}
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-lg shadow overflow-hidden">
-              {orders.length === 0 ? (
-                <div className="p-8 text-center text-muted-foreground">
-                  <p>Tidak ada pesanan</p>
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-gray-50 border-b border-gray-200">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">ID Pesanan</th>
-                        <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">Pelanggan</th>
-                        <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">Total</th>
-                        <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">Status</th>
-                        <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">Aksi</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200">
-                      {orders.map((order) => (
-                        <tr key={order.id} className="hover:bg-gray-50">
-                          <td className="px-6 py-4">
-                            <span className="font-mono text-sm font-semibold text-primary">
-                              {order.id.substring(0, 12)}...
-                            </span>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div>
-                              <p className="font-medium text-foreground">{order.customer.fullName}</p>
-                              <p className="text-sm text-muted-foreground">{order.customer.email}</p>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 font-semibold text-foreground">
-                            Rp {order.total.toLocaleString('id-ID')}
-                          </td>
-                          <td className="px-6 py-4">
-                            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                              order.status === 'pending'
-                                ? 'bg-yellow-100 text-yellow-800'
-                                : order.status === 'completed'
-                                ? 'bg-green-100 text-green-800'
-                                : 'bg-blue-100 text-blue-800'
-                            }`}>
-                              {order.status === 'pending' && 'Menunggu'}
-                              {order.status === 'processing' && 'Diproses'}
-                              {order.status === 'completed' && 'Selesai'}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4">
-                            <button
-                              onClick={() => setSelectedOrder(order)}
-                              className="p-2 hover:bg-gray-100 rounded-lg text-primary transition-colors"
-                            >
-                              <Eye className="w-4 h-4" />
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Order Detail */}
+      <AdminModal
+        title={`Update Order Status - ${selectedOrder?.id}`}
+        isOpen={showModal}
+        onClose={() => {
+          setShowModal(false);
+          setSelectedOrder(null);
+        }}
+        size="sm"
+      >
+        <div className="space-y-4">
           <div>
-            {selectedOrder ? (
-              <div className="bg-white rounded-lg shadow p-6 sticky top-6">
-                <h2 className="text-xl font-bold text-foreground mb-4">Detail Pesanan</h2>
+            <label className="block text-sm font-medium text-gray-900 mb-2">
+              New Status
+            </label>
+            <select
+              value={newStatus}
+              onChange={(e) => setNewStatus(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+            >
+              <option value="pending">Pending</option>
+              <option value="paid">Paid</option>
+              <option value="shipped">Shipped</option>
+              <option value="completed">Completed</option>
+            </select>
+          </div>
 
-                <div className="space-y-4 text-sm">
-                  <div>
-                    <p className="text-muted-foreground mb-1">ID Pesanan</p>
-                    <p className="font-mono font-semibold text-foreground text-xs">
-                      {selectedOrder.id}
-                    </p>
-                  </div>
-
-                  <div>
-                    <p className="text-muted-foreground mb-1">Nama Pelanggan</p>
-                    <p className="font-semibold text-foreground">
-                      {selectedOrder.customer.fullName}
-                    </p>
-                  </div>
-
-                  <div>
-                    <p className="text-muted-foreground mb-1">Email</p>
-                    <p className="text-foreground">{selectedOrder.customer.email}</p>
-                  </div>
-
-                  <div>
-                    <p className="text-muted-foreground mb-1">No. Telepon</p>
-                    <p className="text-foreground">{selectedOrder.customer.phone}</p>
-                  </div>
-
-                  <div className="border-t border-gray-200 pt-4">
-                    <p className="text-muted-foreground mb-1">Total Pembayaran</p>
-                    <p className="text-2xl font-bold text-primary">
-                      Rp {selectedOrder.total.toLocaleString('id-ID')}
-                    </p>
-                  </div>
-
-                  <div className="border-t border-gray-200 pt-4">
-                    <p className="text-muted-foreground mb-3">Ubah Status</p>
-                    <div className="space-y-2">
-                      {['pending', 'processing', 'completed'].map((status) => (
-                        <button
-                          key={status}
-                          onClick={() => handleUpdateStatus(selectedOrder.id, status)}
-                          className={`w-full px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
-                            selectedOrder.status === status
-                              ? 'bg-primary text-white'
-                              : 'bg-gray-100 text-foreground hover:bg-gray-200'
-                          }`}
-                        >
-                          {status === 'pending' && 'Menunggu'}
-                          {status === 'processing' && 'Diproses'}
-                          {status === 'completed' && 'Selesai'}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {selectedOrder.status === 'completed' && (
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-3 flex gap-2">
-                      <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
-                      <p className="text-xs text-green-700">Pesanan telah selesai</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <div className="bg-white rounded-lg shadow p-6 text-center text-muted-foreground">
-                <p>Pilih pesanan untuk melihat detail</p>
-              </div>
-            )}
+          <div className="flex gap-3 pt-4">
+            <button
+              onClick={submitStatusUpdate}
+              className="flex-1 bg-primary text-white font-medium py-2 rounded-lg hover:bg-primary/90"
+            >
+              Update Status
+            </button>
+            <button
+              onClick={() => setShowModal(false)}
+              className="flex-1 border border-gray-300 text-gray-900 font-medium py-2 rounded-lg hover:bg-gray-50"
+            >
+              Cancel
+            </button>
           </div>
         </div>
-      </main>
-    </div>
+      </AdminModal>
+    </AdminLayout>
   );
 }
