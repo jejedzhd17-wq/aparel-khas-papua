@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Navigation from '@/components/Navigation';
-import { Eye, EyeOff } from 'lucide-react';
+import { registerUser } from '@/services/authService';
+import { Eye, EyeOff, CheckCircle } from 'lucide-react';
 
 export default function Register() {
   const navigate = useNavigate();
@@ -14,6 +15,7 @@ export default function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -24,40 +26,37 @@ export default function Register() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setSuccess(false);
     setLoading(true);
 
-    // Validation
-    if (!formData.name || !formData.email || !formData.password || !formData.confirmPassword) {
-      setError('Semua field harus diisi');
-      setLoading(false);
-      return;
-    }
-
-    if (!formData.email.includes('@')) {
-      setError('Format email tidak valid');
-      setLoading(false);
-      return;
-    }
-
-    if (formData.password.length < 6) {
-      setError('Password minimal 6 karakter');
-      setLoading(false);
-      return;
-    }
-
+    // Validate password match first
     if (formData.password !== formData.confirmPassword) {
       setError('Password tidak cocok');
       setLoading(false);
       return;
     }
 
-    // Simulate API call
-    setTimeout(() => {
-      const user = { name: formData.name, email: formData.email };
-      localStorage.setItem('noken-user', JSON.stringify(user));
+    // Use auth service to register
+    const result = registerUser(
+      formData.name,
+      formData.email,
+      formData.password
+    );
+
+    if (!result.success) {
+      setError(result.message);
       setLoading(false);
-      navigate('/');
-    }, 1000);
+      return;
+    }
+
+    // Show success message and redirect to login
+    setSuccess(true);
+    setFormData({ name: '', email: '', password: '', confirmPassword: '' });
+
+    // Redirect to login after 2 seconds
+    setTimeout(() => {
+      navigate('/login', { state: { message: 'Akun berhasil dibuat. Silakan login.' } });
+    }, 2000);
   };
 
   return (
@@ -78,6 +77,13 @@ export default function Register() {
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
               {error}
+            </div>
+          )}
+
+          {success && (
+            <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg text-sm flex items-center gap-2">
+              <CheckCircle className="w-5 h-5" />
+              Akun berhasil dibuat! Mengalihkan ke halaman login...
             </div>
           )}
 
