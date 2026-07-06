@@ -12,6 +12,13 @@ export default {
         "2xl": "1400px",
       },
     },
+    fontFamily: {
+      sans: ['Plus Jakarta Sans', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+      jakarta: ['Plus Jakarta Sans', 'sans-serif'],
+      playfair: ['Playfair Display', 'serif'],
+      poppins: ['Poppins', 'sans-serif'],
+      mono: ['ui-monospace', 'SFMono-Regular', 'monospace'],
+    },
     extend: {
       colors: {
         border: "hsl(var(--border))",
@@ -58,6 +65,7 @@ export default {
           ring: "hsl(var(--sidebar-ring))",
         },
       },
+
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",

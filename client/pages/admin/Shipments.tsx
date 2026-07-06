@@ -14,6 +14,20 @@ interface Shipment {
   date: string;
 }
 
+const STATUS_STYLE: Record<string, string> = {
+  pending: 'bg-yellow-50 text-yellow-700 border-yellow-100',
+  shipped: 'bg-blue-50 text-blue-700 border-blue-100',
+  in_transit: 'bg-purple-50 text-purple-700 border-purple-100',
+  delivered: 'bg-green-50 text-green-700 border-green-100',
+};
+
+const STATUS_LABEL: Record<string, string> = {
+  pending: 'Menunggu',
+  shipped: 'Dikirim',
+  in_transit: 'Dalam Perjalanan',
+  delivered: 'Sampai Tujuan',
+};
+
 export default function AdminShipments() {
   const navigate = useNavigate();
   const [shipments, setShipments] = useState<Shipment[]>([]);
@@ -29,10 +43,9 @@ export default function AdminShipments() {
   useEffect(() => {
     const savedAdmin = localStorage.getItem('noken-admin');
     if (!savedAdmin) {
-      navigate('/admin/login');
+      navigate('/login');
       return;
     }
-
     loadShipments();
   }, [navigate]);
 
@@ -46,7 +59,7 @@ export default function AdminShipments() {
         { id: 'SHIP-4', orderId: 'ORD-004', courier: 'Pos Indonesia', trackingNumber: 'POS111222333', status: 'pending', date: '2024-01-17' },
       ]);
       setIsLoading(false);
-    }, 500);
+    }, 450);
   };
 
   const handleAddShipment = () => {
@@ -66,7 +79,7 @@ export default function AdminShipments() {
   };
 
   const handleDelete = (shipment: Shipment) => {
-    if (confirm(`Delete shipment ${shipment.id}?`)) {
+    if (confirm(`Hapus pengiriman ${shipment.id}?`)) {
       setShipments(shipments.filter((s) => s.id !== shipment.id));
     }
   };
@@ -95,44 +108,37 @@ export default function AdminShipments() {
     setShowModal(false);
   };
 
-  const statusBadgeColor = (status: string) => {
-    const colors: Record<string, string> = {
-      pending: 'bg-yellow-100 text-yellow-800',
-      shipped: 'bg-blue-100 text-blue-800',
-      in_transit: 'bg-purple-100 text-purple-800',
-      delivered: 'bg-green-100 text-green-800',
-    };
-    return colors[status] || 'bg-gray-100 text-gray-800';
-  };
-
   const columns = [
-    { key: 'id' as const, label: 'Shipment ID' },
-    { key: 'orderId' as const, label: 'Order ID' },
-    { key: 'courier' as const, label: 'Courier' },
-    { key: 'trackingNumber' as const, label: 'Tracking #' },
+    { key: 'id' as const, label: 'ID Kirim' },
+    { key: 'orderId' as const, label: 'ID Pesanan' },
+    { key: 'courier' as const, label: 'Kurir' },
+    { key: 'trackingNumber' as const, label: 'No Resi', hideOnMobile: true },
     {
       key: 'status' as const,
       label: 'Status',
-      render: (value: string) => (
-        <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${statusBadgeColor(value)}`}>
-          {value}
+      render: (value: keyof typeof STATUS_LABEL) => (
+        <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-bold border ${STATUS_STYLE[value] || 'bg-gray-100 text-gray-700 border-gray-200'}`}>
+          {STATUS_LABEL[value] || value}
         </span>
       ),
     },
-    { key: 'date' as const, label: 'Date' },
-    { key: 'actions' as const, label: 'Actions' },
+    { key: 'date' as const, label: 'Tanggal', hideOnMobile: true },
+    { key: 'actions' as const, label: 'Aksi' },
   ];
 
   return (
-    <AdminLayout title="Shipments" description="Track and manage shipments">
+    <AdminLayout title="Pengiriman" description="Lacak dan kelola logistik pengiriman pesanan">
       <div className="mb-6 flex justify-between items-center">
-        <h2 className="text-lg font-semibold text-gray-900">Shipment List</h2>
+        <div>
+          <h2 className="text-lg font-bold text-gray-900">Daftar Pengiriman</h2>
+          <p className="text-xs text-gray-500 mt-0.5">{shipments.length} transaksi pengiriman</p>
+        </div>
         <button
           onClick={handleAddShipment}
-          className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90"
+          className="flex items-center gap-1.5 bg-primary text-white px-3 py-2 rounded-lg hover:bg-primary/90 text-xs font-semibold shadow-sm transition-colors"
         >
-          <Plus className="w-5 h-5" />
-          New Shipment
+          <Plus className="w-4 h-4" />
+          Pengiriman Baru
         </button>
       </div>
 
@@ -145,32 +151,33 @@ export default function AdminShipments() {
       />
 
       <AdminModal
-        title={selectedShipment ? 'Edit Shipment' : 'Create Shipment'}
+        title={selectedShipment ? 'Edit Pengiriman' : 'Buat Pengiriman Baru'}
         isOpen={showModal}
         onClose={() => setShowModal(false)}
       >
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-900 mb-1">
-              Order ID
+            <label className="block text-xs font-semibold text-gray-700 uppercase mb-1">
+              ID Pesanan
             </label>
             <input
               type="text"
               value={formData.orderId}
               onChange={(e) => setFormData({ ...formData, orderId: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary text-sm"
+              placeholder="cth: ORD-001"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-900 mb-1">
-              Courier
+            <label className="block text-xs font-semibold text-gray-700 uppercase mb-1">
+              Kurir
             </label>
             <select
               value={formData.courier}
               onChange={(e) => setFormData({ ...formData, courier: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary text-sm bg-white"
             >
               <option>JNE</option>
               <option>J&T</option>
@@ -180,31 +187,32 @@ export default function AdminShipments() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-900 mb-1">
-              Tracking Number
+            <label className="block text-xs font-semibold text-gray-700 uppercase mb-1">
+              Nomor Resi
             </label>
             <input
               type="text"
               value={formData.trackingNumber}
               onChange={(e) => setFormData({ ...formData, trackingNumber: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary text-sm"
+              placeholder="Masukkan nomor resi pengiriman"
               required
             />
           </div>
 
-          <div className="flex gap-3 pt-4">
+          <div className="flex gap-3 pt-2">
             <button
               type="submit"
-              className="flex-1 bg-primary text-white font-medium py-2 rounded-lg hover:bg-primary/90"
+              className="flex-1 bg-primary text-white font-semibold py-2 rounded-lg hover:bg-primary/90 text-sm transition-colors"
             >
-              {selectedShipment ? 'Update' : 'Create'} Shipment
+              {selectedShipment ? 'Simpan' : 'Buat'}
             </button>
             <button
               type="button"
               onClick={() => setShowModal(false)}
-              className="flex-1 border border-gray-300 text-gray-900 font-medium py-2 rounded-lg hover:bg-gray-50"
+              className="flex-1 border border-gray-300 text-gray-700 font-semibold py-2 rounded-lg hover:bg-gray-50 text-sm transition-colors"
             >
-              Cancel
+              Batal
             </button>
           </div>
         </form>

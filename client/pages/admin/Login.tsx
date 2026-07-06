@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function AdminLogin() {
   const navigate = useNavigate();
@@ -15,15 +16,33 @@ export default function AdminLogin() {
     setError('');
     setLoading(true);
 
-    // Demo credentials: admin@nokenpapua.com / admin123
-    if (email === 'admin@nokenpapua.com' && password === 'admin123') {
-      setTimeout(() => {
-        localStorage.setItem('noken-admin', JSON.stringify({ email, role: 'admin' }));
-        setLoading(false);
-        navigate('/admin/dashboard');
-      }, 1000);
-    } else {
-      setError('Email atau password salah');
+    try {
+      const response = await fetch('/api/auth/admin/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        localStorage.setItem('noken-admin-token', data.data.token);
+        localStorage.setItem('noken-admin', JSON.stringify(data.data.user));
+        toast.success('Login admin berhasil!');
+        setTimeout(() => {
+          navigate('/admin/dashboard');
+        }, 1000);
+      } else {
+        setError(data.message || 'Email atau password salah');
+        toast.error(data.message || 'Login admin gagal');
+      }
+    } catch (err) {
+      console.error('Admin login error:', err);
+      setError('Terjadi kesalahan koneksi server');
+      toast.error('Gagal terhubung ke server');
+    } finally {
       setLoading(false);
     }
   };
@@ -40,7 +59,7 @@ export default function AdminLogin() {
             Admin Panel
           </h1>
           <p className="text-muted-foreground">
-            Noken Papua Store
+            Aparel Khas Papua Store
           </p>
         </div>
 

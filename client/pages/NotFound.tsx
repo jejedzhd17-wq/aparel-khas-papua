@@ -2,6 +2,7 @@ import { useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import Navigation from "@/components/Navigation";
+import Footer from "@/components/Footer";
 
 const NotFound = () => {
   const location = useLocation();
@@ -31,6 +32,8 @@ const NotFound = () => {
           </Link>
         </div>
       </div>
+
+      <Footer />
     </div>
   );
 };

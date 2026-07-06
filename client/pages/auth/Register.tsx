@@ -9,6 +9,7 @@ export default function Register() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    phone: '',
     password: '',
     confirmPassword: '',
   });
@@ -29,34 +30,48 @@ export default function Register() {
     setSuccess(false);
     setLoading(true);
 
-    // Validate password match first
+    if (!formData.phone || formData.phone.trim().length < 8) {
+      setError('Nomor HP wajib diisi (minimal 8 digit)');
+      setLoading(false);
+      return;
+    }
+
     if (formData.password !== formData.confirmPassword) {
       setError('Password tidak cocok');
       setLoading(false);
       return;
     }
 
-    // Use auth service to register
-    const result = registerUser(
-      formData.name,
-      formData.email,
-      formData.password
-    );
+    try {
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          password: formData.password
+        })
+      });
+      const data = await response.json();
 
-    if (!result.success) {
-      setError(result.message);
+      if (data.success) {
+        setSuccess(true);
+        setLoading(false);
+        setFormData({ name: '', email: '', phone: '', password: '', confirmPassword: '' });
+
+        setTimeout(() => {
+          navigate('/login', { state: { message: 'Akun berhasil dibuat. Silakan login.' } });
+        }, 2000);
+      } else {
+        setError(data.message || 'Gagal mendaftarkan akun');
+        setLoading(false);
+      }
+    } catch (err) {
+      console.error('Register error:', err);
+      setError('Gagal terhubung ke server');
       setLoading(false);
-      return;
     }
-
-    // Show success message and redirect to login
-    setSuccess(true);
-    setFormData({ name: '', email: '', password: '', confirmPassword: '' });
-
-    // Redirect to login after 2 seconds
-    setTimeout(() => {
-      navigate('/login', { state: { message: 'Akun berhasil dibuat. Silakan login.' } });
-    }, 2000);
   };
 
   return (
@@ -113,6 +128,22 @@ export default function Register() {
               placeholder="your@email.com"
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-foreground mb-2">
+              No. HP / WhatsApp <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="tel"
+              name="phone"
+              value={formData.phone}
+              onChange={handleChange}
+              placeholder="08xxxxxxxxxx"
+              required
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+            <p className="text-xs text-muted-foreground mt-1">Digunakan untuk konfirmasi pesanan</p>
           </div>
 
           <div>
@@ -180,13 +211,6 @@ export default function Register() {
             Masuk di sini
           </Link>
         </p>
-
-        <div className="mt-8 bg-green-50 border border-green-200 rounded-lg p-4">
-          <p className="text-xs font-semibold text-green-900 mb-2">Catatan:</p>
-          <p className="text-xs text-green-800">
-            Sistem autentikasi ini adalah demo. Data disimpan di localStorage.
-          </p>
-        </div>
       </div>
     </div>
   );

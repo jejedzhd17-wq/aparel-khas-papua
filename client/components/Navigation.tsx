@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { Menu, X, ShoppingCart, User, Moon, Sun } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
+import { Menu, X, ShoppingCart, User, Heart } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useTheme } from '@/context/ThemeContext';
+import { useWishlist } from '@/context/WishlistContext';
 
 interface User {
   name: string;
@@ -12,8 +13,10 @@ interface User {
 export default function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
   const { items } = useCart();
-  const { isDark, toggleTheme } = useTheme();
+  useTheme();
+  const { items: wishlistItems } = useWishlist();
   const [user, setUser] = useState<User | null>(null);
+  const location = useLocation();
 
   useEffect(() => {
     const savedUser = localStorage.getItem('noken-user');
@@ -23,21 +26,24 @@ export default function Navigation() {
   }, []);
 
   const cartCount = items.reduce((sum, item) => sum + item.quantity, 0);
+  const wishlistCount = wishlistItems.length;
 
   const toggleMenu = () => setIsOpen(!isOpen);
 
   const handleLogout = () => {
     localStorage.removeItem('noken-user');
+    localStorage.removeItem('noken-token');
     setUser(null);
     setIsOpen(false);
+    window.location.href = '/';
   };
 
   const navLinks = [
-    { href: '/', label: 'Home' },
+    { href: '/', label: 'Beranda' },
     { href: '/shop', label: 'Shop' },
-    { href: '/shipment-tracking', label: 'Track' },
-    { href: '/about', label: 'About' },
-    { href: '/contact', label: 'Contact' },
+    { href: '/shipment-tracking', label: 'Lacak Paket' },
+    { href: '/about', label: 'Tentang' },
+    { href: '/contact', label: 'Kontak' },
   ];
 
   return (
@@ -46,26 +52,31 @@ export default function Navigation() {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 group">
-            <div className="w-10 h-10 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center transform group-hover:scale-105 transition-transform">
-              <span className="text-white font-bold text-lg">NK</span>
+            <div className="">
+              <img src='/cendrawasih.png' alt="Logo" className="w-6 h-6" />
             </div>
             <div className="hidden sm:block">
-              <h1 className="font-bold text-lg text-foreground">Noken Papua</h1>
+              <h1 className="font-bold text-lg text-foreground">Aparel Papua</h1>
               <p className="text-xs text-muted-foreground">Store</p>
             </div>
           </Link>
 
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center gap-8">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                to={link.href}
-                className="text-foreground font-medium hover:text-primary transition-colors duration-200 text-sm"
-              >
-                {link.label}
-              </Link>
-            ))}
+            {navLinks.map((link) => {
+              const isActive = location.pathname === link.href;
+              return (
+                <Link
+                  key={link.href}
+                  to={link.href}
+                  className={`transition-colors duration-200 text-sm font-medium ${
+                    isActive ? 'text-primary font-semibold' : 'text-foreground hover:text-primary'
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              );
+            })}
 
             {/* User Menu */}
             {user ? (
@@ -75,12 +86,21 @@ export default function Navigation() {
                 </div>
                 <div className="text-sm">
                   <p className="font-semibold text-foreground">{user.name}</p>
-                  <button
-                    onClick={handleLogout}
-                    className="text-xs text-muted-foreground hover:text-red-600 transition-colors"
-                  >
-                    Keluar
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <Link
+                      to="/order-history"
+                      className="text-xs text-primary hover:underline transition-colors font-medium"
+                    >
+                      Riwayat
+                    </Link>
+                    <span className="text-xs text-gray-300">|</span>
+                    <button
+                      onClick={handleLogout}
+                      className="text-xs text-muted-foreground hover:text-red-600 transition-colors"
+                    >
+                      Keluar
+                    </button>
+                  </div>
                 </div>
               </div>
             ) : (
@@ -103,14 +123,19 @@ export default function Navigation() {
 
           {/* Right side actions */}
           <div className="flex items-center gap-4">
-            {/* Dark Mode Toggle */}
-            <button
-              onClick={toggleTheme}
-              className="p-2 text-foreground hover:text-primary transition-colors"
-              aria-label="Toggle dark mode"
+
+            <Link
+              to="/wishlist"
+              className="relative p-2 text-foreground hover:text-primary transition-colors"
+              aria-label="Wishlist"
             >
-              {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-            </button>
+              <Heart className="w-5 h-5" />
+              {wishlistCount > 0 && (
+                <span className="absolute top-0 right-0 w-4 h-4 bg-red-500 rounded-full text-white text-xs flex items-center justify-center font-bold">
+                  {wishlistCount > 9 ? '9+' : wishlistCount}
+                </span>
+              )}
+            </Link>
 
             <Link
               to="/cart"
@@ -138,16 +163,21 @@ export default function Navigation() {
         {/* Mobile Menu */}
         {isOpen && (
           <div className="md:hidden pb-4 border-t border-gray-200">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                to={link.href}
-                className="block px-4 py-2 text-foreground hover:bg-gray-50 hover:text-primary transition-colors text-sm font-medium"
-                onClick={() => setIsOpen(false)}
-              >
-                {link.label}
-              </Link>
-            ))}
+            {navLinks.map((link) => {
+              const isActive = location.pathname === link.href;
+              return (
+                <Link
+                  key={link.href}
+                  to={link.href}
+                  className={`block px-4 py-2 hover:bg-gray-50 transition-colors text-sm font-medium ${
+                    isActive ? 'text-primary bg-primary/5 font-semibold' : 'text-foreground hover:text-primary'
+                  }`}
+                  onClick={() => setIsOpen(false)}
+                >
+                  {link.label}
+                </Link>
+              );
+            })}
 
             {/* Mobile User Menu */}
             <div className="border-t border-gray-200 mt-2 pt-2">
@@ -157,6 +187,13 @@ export default function Navigation() {
                     <p className="font-semibold text-foreground text-sm">{user.name}</p>
                     <p className="text-xs text-muted-foreground">{user.email}</p>
                   </div>
+                  <Link
+                    to="/order-history"
+                    className="block px-4 py-2 text-primary hover:bg-gray-50 font-medium text-sm"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Riwayat Pesanan
+                  </Link>
                   <button
                     onClick={handleLogout}
                     className="w-full text-left px-4 py-2 text-red-600 hover:bg-gray-50 font-medium text-sm"

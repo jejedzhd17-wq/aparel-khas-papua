@@ -1,6 +1,7 @@
 import { useParams, Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import Navigation from '@/components/Navigation';
+import Footer from '@/components/Footer';
 import { CheckCircle, Copy, AlertCircle } from 'lucide-react';
 
 interface Order {
@@ -25,6 +26,7 @@ interface Order {
   paymentMethod: string;
   bankName?: string;
   eWalletName?: string;
+  status?: string;
   timestamp: string;
 }
 
@@ -33,13 +35,91 @@ export default function OrderConfirmation() {
   const [order, setOrder] = useState<Order | null>(null);
   const [copied, setCopied] = useState(false);
 
+  const getStatusLabel = (status?: string, paymentMethod?: string) => {
+    const isCod = paymentMethod === 'cod';
+
+    switch (status) {
+      case 'pending':
+        return isCod
+          ? { label: 'Diproses (Bayar di Tempat)', color: 'text-amber-700 bg-amber-50 border-amber-200' }
+          : { label: 'Menunggu Pembayaran', color: 'text-yellow-700 bg-yellow-50 border-yellow-200' };
+      case 'paid':
+      case 'dibayar':
+        return isCod
+          ? { label: 'Diproses (Bayar di Tempat)', color: 'text-amber-700 bg-amber-50 border-amber-200' }
+          : { label: 'Lunas (Sedang Diproses)', color: 'text-green-700 bg-green-50 border-green-200' };
+      case 'shipped':
+      case 'dikirim':
+        return { label: 'Pesanan Dikirim', color: 'text-blue-700 bg-blue-50 border-blue-200' };
+      case 'completed':
+      case 'selesai':
+        return { label: 'Pesanan Selesai', color: 'text-purple-700 bg-purple-50 border-purple-200' };
+      case 'ditolak':
+        return { label: 'Pesanan Ditolak', color: 'text-red-700 bg-red-50 border-red-200' };
+      default:
+        return isCod
+          ? { label: 'Diproses (Bayar di Tempat)', color: 'text-amber-700 bg-amber-50 border-amber-200' }
+          : { label: 'Menunggu Pembayaran', color: 'text-yellow-700 bg-yellow-50 border-yellow-200' };
+    }
+  };
+
   useEffect(() => {
-    if (orderId) {
+    const fetchOrderDetails = async () => {
+      if (!orderId) return;
+
+      // Fallback local first
       const savedOrder = localStorage.getItem(`order-${orderId}`);
       if (savedOrder) {
         setOrder(JSON.parse(savedOrder));
       }
-    }
+
+      // Realtime fetch from DB
+      const token = localStorage.getItem('noken-token');
+      if (token) {
+        try {
+          const res = await fetch(`/api/orders/${orderId}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          const data = await res.json();
+          if (data.success && data.data) {
+            const o = data.data;
+            const lines = (o.customer?.address || '').split('\n');
+            const mappedOrder = {
+              id: String(o.id),
+              customer: {
+                fullName: lines[0] || o.customer?.fullName || '',
+                email: lines[1] || o.customer?.email || '',
+                phone: lines[2] || o.customer?.phone || '',
+                address: lines.slice(3).join(', ') || lines[3] || o.customer?.address || '',
+                city: o.customer?.city || '',
+                province: o.customer?.province || '',
+                postalCode: o.customer?.postalCode || '',
+              },
+              items: (o.items || []).map((item: any) => ({
+                id: item.id,
+                name: item.name || item.nama_produk,
+                price: item.price || item.harga || 0,
+                quantity: item.quantity || item.jumlah || 1,
+                size: item.size || 'M',
+              })),
+              total: o.total,
+              paymentMethod: o.paymentMethod || 'transfer',
+              bankName: o.bankName || '',
+              eWalletName: o.eWalletName || '',
+              status: o.status,
+              timestamp: o.timestamp,
+            };
+            setOrder(mappedOrder);
+            // Sync to local storage
+            localStorage.setItem(`order-${orderId}`, JSON.stringify(mappedOrder));
+          }
+        } catch (err) {
+          console.error('Error fetching order in confirmation page:', err);
+        }
+      }
+    };
+
+    fetchOrderDetails();
   }, [orderId]);
 
   const handleCopyOrderId = () => {
@@ -74,9 +154,9 @@ export default function OrderConfirmation() {
   }
 
   const bankInfo: Record<string, { name: string; account: string; accountName: string }> = {
-    bca: { name: 'BCA', account: '1234567890', accountName: 'Noken Papua Store' },
-    bri: { name: 'BRI', account: '0987654321', accountName: 'Noken Papua Store' },
-    mandiri: { name: 'Mandiri', account: '1122334455', accountName: 'Noken Papua Store' },
+    bca: { name: 'BCA', account: '1234567890', accountName: 'Aparel Khas Papua Store' },
+    bri: { name: 'BRI', account: '0987654321', accountName: 'Aparel Khas Papua Store' },
+    mandiri: { name: 'Mandiri', account: '1122334455', accountName: 'Aparel Khas Papua Store' },
   };
 
   const paymentInstructions = () => {
@@ -104,7 +184,7 @@ export default function OrderConfirmation() {
             <div className="flex justify-between bg-yellow-50 p-2 rounded">
               <span className="text-muted-foreground">Jumlah Transfer</span>
               <span className="font-bold text-primary">
-                Rp {order.total.toLocaleString('id-ID')}
+                Rp {Number(order.total).toLocaleString('id-ID')}
               </span>
             </div>
           </div>
@@ -122,7 +202,7 @@ export default function OrderConfirmation() {
           </p>
           <div className="bg-yellow-50 p-3 rounded mt-3 text-center">
             <span className="font-bold text-primary text-2xl">
-              Rp {order.total.toLocaleString('id-ID')}
+              Rp {Number(order.total).toLocaleString('id-ID')}
             </span>
           </div>
         </div>
@@ -136,7 +216,7 @@ export default function OrderConfirmation() {
           </p>
           <div className="bg-yellow-50 p-3 rounded mt-3 text-center">
             <span className="font-bold text-primary text-2xl">
-              Rp {order.total.toLocaleString('id-ID')}
+              Rp {Number(order.total).toLocaleString('id-ID')}
             </span>
           </div>
         </div>
@@ -157,7 +237,7 @@ export default function OrderConfirmation() {
             </h1>
           </div>
           <p className="text-muted-foreground text-lg">
-            Terima kasih telah berbelanja di Noken Papua Store
+            Terima kasih telah berbelanja di Aparel Khas Papua Store
           </p>
         </div>
       </section>
@@ -230,7 +310,7 @@ export default function OrderConfirmation() {
                       </p>
                     </div>
                     <span className="font-bold text-primary">
-                      Rp {(item.price * item.quantity).toLocaleString('id-ID')}
+                      Rp {(Number(item.price) * item.quantity).toLocaleString('id-ID')}
                     </span>
                   </div>
                 ))}
@@ -248,7 +328,7 @@ export default function OrderConfirmation() {
               <div className="space-y-3 mb-6 pb-6 border-b border-gray-300">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Subtotal</span>
-                  <span className="font-semibold">Rp {order.total.toLocaleString('id-ID')}</span>
+                  <span className="font-semibold">Rp {Number(order.total).toLocaleString('id-ID')}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Ongkir</span>
@@ -259,18 +339,27 @@ export default function OrderConfirmation() {
               <div className="flex justify-between mb-6 text-lg">
                 <span className="font-bold text-foreground">Total</span>
                 <span className="font-bold text-primary text-2xl">
-                  Rp {order.total.toLocaleString('id-ID')}
+                  Rp {Number(order.total).toLocaleString('id-ID')}
                 </span>
               </div>
 
-              <div className="bg-white rounded-lg p-3 mb-6">
-                <p className="text-xs text-muted-foreground mb-1">Status Pembayaran</p>
-                <p className="font-bold text-yellow-600">Menunggu Pembayaran</p>
+              <div className={`border rounded-lg p-4 mb-6 ${getStatusLabel(order.status, order.paymentMethod).color}`}>
+                <p className="text-xs text-muted-foreground mb-1">Status Pembayaran / Pesanan</p>
+                <p className="font-bold text-lg">{getStatusLabel(order.status, order.paymentMethod).label}</p>
               </div>
+
+              {order.status === 'pending' && order.paymentMethod !== 'cod' && (
+                <Link
+                  to={`/payment/${orderId}`}
+                  className="w-full bg-yellow-500 hover:bg-yellow-600 text-slate-950 font-bold py-3 rounded-lg transition-colors block text-center mb-3 text-sm text-center"
+                >
+                  Bayar Sekarang
+                </Link>
+              )}
 
               <Link
                 to="/shop"
-                className="w-full bg-primary text-white font-semibold py-2 rounded-lg hover:bg-primary/90 transition-colors block text-center"
+                className="w-full border-2 border-gray-300 text-foreground font-semibold py-2 rounded-lg hover:bg-gray-50 transition-colors block text-center"
               >
                 Lanjut Belanja
               </Link>
@@ -286,22 +375,24 @@ export default function OrderConfirmation() {
           </p>
           <div className="flex flex-col md:flex-row gap-4">
             <a
-              href="tel:+6281234567890"
+              href="https://wa.me/6281247386685"
               className="flex-1 bg-white border border-gray-300 rounded-lg p-3 hover:border-primary transition-colors text-center"
             >
               <p className="font-semibold text-foreground">WhatsApp</p>
-              <p className="text-sm text-muted-foreground">+62 812 3456 7890</p>
+              <p className="text-sm text-muted-foreground">0812-4738-6685</p>
             </a>
             <a
-              href="mailto:hello@nokenpapua.store"
+              href="mailto:aparelkhas.papua@gmail.com"
               className="flex-1 bg-white border border-gray-300 rounded-lg p-3 hover:border-primary transition-colors text-center"
             >
               <p className="font-semibold text-foreground">Email</p>
-              <p className="text-sm text-muted-foreground">hello@nokenpapua.store</p>
+              <p className="text-sm text-muted-foreground">aparelkhas.papua@gmail.com</p>
             </a>
           </div>
         </div>
       </div>
+
+      <Footer />
     </div>
   );
 }

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import AdminLayout from '@/components/AdminLayout';
 import AdminTable from '@/components/AdminTable';
 import StarRating from '@/components/StarRating';
+import { toast } from 'sonner';
 
 interface Review {
   id: number;
@@ -18,74 +19,73 @@ export default function AdminReviews() {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  const getAdminToken = () => {
+    const admin = localStorage.getItem('noken-admin');
+    if (!admin) return null;
+    return JSON.parse(admin).token;
+  };
+
   useEffect(() => {
     const savedAdmin = localStorage.getItem('noken-admin');
     if (!savedAdmin) {
-      navigate('/admin/login');
+      navigate('/login');
       return;
     }
-
     loadReviews();
   }, [navigate]);
 
-  const loadReviews = () => {
+  const loadReviews = async () => {
     setIsLoading(true);
-    setTimeout(() => {
-      setReviews([
-        {
-          id: 1,
-          product: 'Kaos Raja Ampat',
-          user: 'Budi Santoso',
-          rating: 5,
-          comment: 'Great quality product, very satisfied!',
-          date: '2024-01-15',
-        },
-        {
-          id: 2,
-          product: 'Hoodie Papua',
-          user: 'Siti Nurhaliza',
-          rating: 4,
-          comment: 'Good product but sizing runs large',
-          date: '2024-01-12',
-        },
-        {
-          id: 3,
-          product: 'Tas Noken',
-          user: 'Ahmad Wijaya',
-          rating: 5,
-          comment: 'Authentic and beautiful design!',
-          date: '2024-01-10',
-        },
-        {
-          id: 4,
-          product: 'Gelang Tradisional',
-          user: 'Dewi Lestari',
-          rating: 4,
-          comment: 'Nice accessory, good value',
-          date: '2024-01-08',
-        },
-        {
-          id: 5,
-          product: 'Kaos Wayang',
-          user: 'Rinto Harahap',
-          rating: 3,
-          comment: 'Okay product but colors faded quickly',
-          date: '2024-01-05',
-        },
-      ]);
+    try {
+      const res = await fetch('/api/reviews');
+      const data = await res.json();
+      if (data.success && data.data) {
+        const mapped = data.data.map((r: any) => ({
+          id: r.id,
+          product: r.productName || 'Produk',
+          user: r.userName || 'Anonim',
+          rating: r.rating,
+          comment: r.comment || '',
+          date: r.date ? r.date.split('T')[0] : '2024-01-01',
+        }));
+        setReviews(mapped);
+      } else {
+        toast.error('Gagal memuat ulasan');
+      }
+    } catch (err) {
+      console.error('Failed to load reviews:', err);
+      toast.error('Gagal menghubungkan ke server');
+    } finally {
       setIsLoading(false);
-    }, 500);
+    }
   };
 
-  const handleDelete = (review: Review) => {
-    if (confirm(`Delete review by ${review.user}?`)) {
-      setReviews(reviews.filter((r) => r.id !== review.id));
+  const handleDelete = async (review: Review) => {
+    if (!confirm(`Hapus ulasan dari ${review.user}?`)) return;
+    try {
+      const token = getAdminToken();
+      const res = await fetch(`/api/reviews/${review.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success('Ulasan berhasil dihapus');
+        loadReviews();
+      } else {
+        toast.error(data.message || 'Gagal menghapus ulasan');
+      }
+    } catch (err) {
+      console.error('Delete review error:', err);
+      toast.error('Terjadi kesalahan koneksi');
     }
   };
 
   const columns = [
-    { key: 'product' as const, label: 'Product' },
-    { key: 'user' as const, label: 'User' },
+    { key: 'product' as const, label: 'Produk' },
+    { key: 'user' as const, label: 'Nama User' },
     {
       key: 'rating' as const,
       label: 'Rating',
@@ -93,20 +93,20 @@ export default function AdminReviews() {
     },
     {
       key: 'comment' as const,
-      label: 'Comment',
+      label: 'Komentar/Ulasan',
       render: (value: string) => (
-        <p className="max-w-xs truncate">{value}</p>
+        <p className="max-w-[200px] truncate text-xs text-gray-600" title={value}>{value}</p>
       ),
     },
-    { key: 'date' as const, label: 'Date' },
-    { key: 'actions' as const, label: 'Actions' },
+    { key: 'date' as const, label: 'Tanggal', hideOnMobile: true },
+    { key: 'actions' as const, label: 'Aksi' },
   ];
 
   return (
-    <AdminLayout title="Reviews" description="Manage product reviews">
+    <AdminLayout title="Ulasan" description="Pantau ulasan dan rating produk dari pembeli">
       <div className="mb-6">
-        <h2 className="text-lg font-semibold text-gray-900">Review List</h2>
-        <p className="text-sm text-gray-600">Total: {reviews.length} reviews</p>
+        <h2 className="text-lg font-bold text-gray-900">Daftar Ulasan</h2>
+        <p className="text-xs text-gray-500 mt-0.5">{reviews.length} ulasan diterima</p>
       </div>
 
       <AdminTable

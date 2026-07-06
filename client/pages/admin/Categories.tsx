@@ -23,10 +23,9 @@ export default function AdminCategories() {
   useEffect(() => {
     const savedAdmin = localStorage.getItem('noken-admin');
     if (!savedAdmin) {
-      navigate('/admin/login');
+      navigate('/login');
       return;
     }
-
     loadCategories();
   }, [navigate]);
 
@@ -34,13 +33,12 @@ export default function AdminCategories() {
     setIsLoading(true);
     setTimeout(() => {
       setCategories([
-        { id: 1, name: 'Kaos', description: 'T-shirts and casual wear', productCount: 12 },
-        { id: 2, name: 'Hoodie', description: 'Hoodies and sweatshirts', productCount: 8 },
-        { id: 3, name: 'Tas', description: 'Bags and accessories', productCount: 6 },
-        { id: 4, name: 'Aksesoris', description: 'Jewelry and small items', productCount: 10 },
+        { id: 1, name: 'Pakaian', description: 'Kaos kasual dan hoodies premium bahan katun motif Papua', productCount: 20 },
+        { id: 3, name: 'Tas Noken', description: 'Tas Noken tradisional anyaman tangan asli', productCount: 6 },
+        { id: 4, name: 'Aksesoris', description: 'Gelang, kalung, dan gantungan kunci khas', productCount: 10 },
       ]);
       setIsLoading(false);
-    }, 500);
+    }, 400);
   };
 
   const handleEdit = (category: Category) => {
@@ -50,7 +48,7 @@ export default function AdminCategories() {
   };
 
   const handleDelete = (category: Category) => {
-    if (confirm(`Delete category "${category.name}"?`)) {
+    if (confirm(`Hapus kategori "${category.name}"?`)) {
       setCategories(categories.filter((c) => c.id !== category.id));
     }
   };
@@ -86,25 +84,28 @@ export default function AdminCategories() {
   };
 
   const columns = [
-    { key: 'name' as const, label: 'Category Name' },
-    { key: 'description' as const, label: 'Description' },
-    { key: 'productCount' as const, label: 'Products' },
-    { key: 'actions' as const, label: 'Actions' },
+    { key: 'name' as const, label: 'Nama Kategori' },
+    { key: 'description' as const, label: 'Deskripsi', hideOnMobile: true },
+    { key: 'productCount' as const, label: 'Total Produk' },
+    { key: 'actions' as const, label: 'Aksi' },
   ];
 
   return (
-    <AdminLayout title="Categories" description="Manage product categories">
+    <AdminLayout title="Kategori" description="Kelola kategori produk toko Aparel Khas Papua Store">
       <div className="mb-6 flex justify-between items-center">
-        <h2 className="text-lg font-semibold text-gray-900">Category List</h2>
+        <div>
+          <h2 className="text-lg font-bold text-gray-900">Daftar Kategori</h2>
+          <p className="text-xs text-gray-500 mt-0.5">{categories.length} kategori tersedia</p>
+        </div>
         <button
           onClick={() => {
             resetForm();
             setShowModal(true);
           }}
-          className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90"
+          className="flex items-center gap-1.5 bg-primary text-white px-3 py-2 rounded-lg hover:bg-primary/90 text-xs font-semibold shadow-sm transition-colors"
         >
-          <Plus className="w-5 h-5" />
-          Add Category
+          <Plus className="w-4 h-4" />
+          Kategori Baru
         </button>
       </div>
 
@@ -117,7 +118,7 @@ export default function AdminCategories() {
       />
 
       <AdminModal
-        title={selectedCategory ? 'Edit Category' : 'Add Category'}
+        title={selectedCategory ? 'Edit Kategori' : 'Tambah Kategori Baru'}
         isOpen={showModal}
         onClose={() => {
           setShowModal(false);
@@ -126,36 +127,38 @@ export default function AdminCategories() {
       >
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-900 mb-1">
-              Category Name
+            <label className="block text-xs font-semibold text-gray-700 uppercase mb-1">
+              Nama Kategori
             </label>
             <input
               type="text"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary text-sm"
+              placeholder="cth: Tas Noken"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-900 mb-1">
-              Description
+            <label className="block text-xs font-semibold text-gray-700 uppercase mb-1">
+              Deskripsi Kategori
             </label>
             <textarea
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm resize-none"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary text-sm resize-none"
               rows={3}
+              placeholder="Tulis deskripsi singkat..."
             />
           </div>
 
-          <div className="flex gap-3 pt-4">
+          <div className="flex gap-3 pt-2">
             <button
               type="submit"
-              className="flex-1 bg-primary text-white font-medium py-2 rounded-lg hover:bg-primary/90"
+              className="flex-1 bg-primary text-white font-semibold py-2 rounded-lg hover:bg-primary/90 text-sm transition-colors"
             >
-              {selectedCategory ? 'Update' : 'Add'} Category
+              {selectedCategory ? 'Simpan' : 'Tambah'}
             </button>
             <button
               type="button"
@@ -163,9 +166,9 @@ export default function AdminCategories() {
                 setShowModal(false);
                 resetForm();
               }}
-              className="flex-1 border border-gray-300 text-gray-900 font-medium py-2 rounded-lg hover:bg-gray-50"
+              className="flex-1 border border-gray-300 text-gray-700 font-semibold py-2 rounded-lg hover:bg-gray-50 text-sm transition-colors"
             >
-              Cancel
+              Batal
             </button>
           </div>
         </form>

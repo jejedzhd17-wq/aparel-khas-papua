@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import StarRating from './StarRating';
 import { Send } from 'lucide-react';
 
@@ -15,9 +15,27 @@ export default function ReviewForm({ productId, onSubmitSuccess }: ReviewFormPro
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
 
+  useEffect(() => {
+    const savedUser = localStorage.getItem('noken-user');
+    if (savedUser) {
+      try {
+        const parsed = JSON.parse(savedUser);
+        setUserName(parsed.name || '');
+      } catch {}
+    }
+  }, []);
+
+  const isLoggedIn = !!localStorage.getItem('noken-token');
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    const token = localStorage.getItem('noken-token');
+    if (!token) {
+      setError('Silakan login terlebih dahulu untuk mengirim review');
+      return;
+    }
 
     if (!userName.trim() || rating === 0 || !comment.trim()) {
       setError('Lengkapi semua field');
@@ -32,6 +50,7 @@ export default function ReviewForm({ productId, onSubmitSuccess }: ReviewFormPro
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           productId,
@@ -46,7 +65,6 @@ export default function ReviewForm({ productId, onSubmitSuccess }: ReviewFormPro
       }
 
       // Reset form
-      setUserName('');
       setRating(0);
       setComment('');
       setSuccess(true);
@@ -82,6 +100,11 @@ export default function ReviewForm({ productId, onSubmitSuccess }: ReviewFormPro
       )}
 
       <div className="space-y-4">
+        {!isLoggedIn && (
+          <div className="p-3 bg-amber-50 border border-amber-200 text-amber-800 rounded-lg text-xs font-semibold">
+            Silakan login terlebih dahulu untuk mengirim review.
+          </div>
+        )}
         {/* Name Field */}
         <div>
           <label className="block text-sm font-semibold text-foreground mb-2">
@@ -91,9 +114,9 @@ export default function ReviewForm({ productId, onSubmitSuccess }: ReviewFormPro
             type="text"
             value={userName}
             onChange={(e) => setUserName(e.target.value)}
-            placeholder="Nama"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
-            disabled={isSubmitting}
+            placeholder={isLoggedIn ? "" : "Silakan login terlebih dahulu"}
+            className="w-full px-4 py-2 border border-gray-200 bg-gray-50 text-gray-500 rounded-lg focus:outline-none text-sm cursor-not-allowed font-medium"
+            disabled={true}
           />
         </div>
 
@@ -127,9 +150,9 @@ export default function ReviewForm({ productId, onSubmitSuccess }: ReviewFormPro
 
         <button
           type="submit"
-          disabled={isSubmitting}
+          disabled={isSubmitting || !isLoggedIn}
           className={`w-full font-semibold py-3 rounded-lg flex items-center justify-center gap-2 transition-colors ${
-            isSubmitting
+            isSubmitting || !isLoggedIn
               ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
               : 'bg-primary text-white hover:bg-primary/90'
           }`}

@@ -1,17 +1,26 @@
 import Navigation from '@/components/Navigation';
+import Footer from '@/components/Footer';
+import { Palette, Leaf, Handshake, Gem } from 'lucide-react';
 
 export default function About() {
   return (
     <div className="min-h-screen bg-white">
       <Navigation />
       
-      <section className="bg-gradient-to-r from-primary/10 to-secondary/10 py-8 md:py-12 px-4">
-        <div className="max-w-7xl mx-auto">
-          <h1 className="text-3xl md:text-4xl font-bold text-foreground font-playfair mb-2">
+      {/* Page Header dengan Background Wanita Adat Papua */}
+      <section 
+        className="relative py-24 md:py-36 px-4 bg-cover bg-[center_35%] text-white overflow-hidden"
+        style={{ backgroundImage: "url('/papua-about.jpg')" }}
+      >
+        {/* Dark Overlay */}
+        <div className="absolute inset-0 bg-black/45" />
+        
+        <div className="relative max-w-7xl mx-auto z-10">
+          <h1 className="text-3xl md:text-5xl font-bold text-white mb-3">
             Tentang Kami
           </h1>
-          <p className="text-muted-foreground text-lg">
-            Pelajari kisah di balik Noken Papua Store
+          <p className="text-white/90 text-lg md:text-xl max-w-2xl">
+            Pelajari kisah di balik Aparel Khas Papua Store
           </p>
         </div>
       </section>
@@ -58,51 +67,42 @@ export default function About() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {[
                 {
-                  icon: '🎨',
+                  icon: <Palette className="w-6 h-6 text-primary" />,
                   title: 'Autentisitas',
                   desc: 'Setiap desain mencerminkan kebenaran budaya Papua'
                 },
                 {
-                  icon: '♻️',
+                  icon: <Leaf className="w-6 h-6 text-primary" />,
                   title: 'Keberlanjutan',
                   desc: 'Komitmen kami terhadap planet dan komunitas lokal'
                 },
                 {
-                  icon: '🤝',
+                  icon: <Handshake className="w-6 h-6 text-primary" />,
                   title: 'Pemberdayaan',
                   desc: 'Kami memberdayakan pengrajin lokal melalui peluang ekonomi'
                 },
                 {
-                  icon: '💎',
+                  icon: <Gem className="w-6 h-6 text-primary" />,
                   title: 'Kualitas',
                   desc: 'Standar tinggi dalam setiap aspek produk kami'
                 },
               ].map((item, idx) => (
-                <div key={idx} className="bg-gray-50 rounded-xl p-6">
-                  <span className="text-4xl mb-3 block">{item.icon}</span>
-                  <h3 className="font-bold text-foreground text-lg mb-2">{item.title}</h3>
-                  <p className="text-muted-foreground">{item.desc}</p>
+                <div key={idx} className="group bg-white border border-primary/30 rounded-xl p-6 flex gap-4 items-start shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
+                  <div className="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center bg-primary/10 border border-primary/20 transition-all duration-300 group-hover:bg-primary/20 group-hover:border-primary/50 group-hover:scale-110">
+                    {item.icon}
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-foreground text-lg mb-1 transition-colors duration-300 group-hover:text-primary">{item.title}</h3>
+                    <p className="text-muted-foreground text-sm leading-relaxed">{item.desc}</p>
+                  </div>
                 </div>
               ))}
             </div>
           </section>
-
-          <section className="bg-gradient-to-r from-primary/10 to-secondary/10 rounded-xl p-8 md:p-12">
-            <h2 className="text-2xl font-bold text-foreground mb-4 font-playfair">
-              Hubungi Kami
-            </h2>
-            <p className="text-muted-foreground mb-6">
-              Pertanyaan tentang produk kami atau ingin berkolaborasi? Jangan ragu untuk menghubungi kami.
-            </p>
-            <a 
-              href="/contact" 
-              className="inline-block bg-primary text-white font-semibold px-8 py-3 rounded-lg hover:bg-primary/90 transition-colors"
-            >
-              Kirim Pesan
-            </a>
-          </section>
         </div>
       </div>
+
+      <Footer />
     </div>
   );
 }

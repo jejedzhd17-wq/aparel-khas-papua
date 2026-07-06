@@ -1,17 +1,20 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import Navigation from '@/components/Navigation';
+import Footer from '@/components/Footer';
 import ReviewList from '@/components/ReviewList';
 import ReviewForm from '@/components/ReviewForm';
-import { Star, Heart, Share2, ShoppingCart, Check } from 'lucide-react';
+import { Star, Heart, Share2, ShoppingCart, Check, ArrowLeft } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useCart } from '@/context/CartContext';
+import { useWishlist } from '@/context/WishlistContext';
+import { toast } from 'sonner';
 
 const PRODUCTS = {
   1: {
     id: 1,
     name: 'Kaos Raja Ampat',
     price: 149000,
-    category: 'Kaos',
+    category: 'Pakaian',
     image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600&h=600&fit=crop',
     rating: 5,
     reviews: 24,
@@ -31,32 +34,6 @@ Perawatan:
 - Keringkan di tempat teduh
 - Setrika dengan suhu sedang`,
     sizes: ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
-    inStock: true,
-  },
-  2: {
-    id: 2,
-    name: 'Hoodie Papua Tribal',
-    price: 299000,
-    category: 'Hoodie',
-    image: 'https://images.unsplash.com/photo-1556821552-919ad7b37f69?w=600&h=600&fit=crop',
-    rating: 5,
-    reviews: 18,
-    description: 'Hoodie nyaman dengan motif tribal Papua yang autentik. Sempurna untuk penggunaan sehari-hari atau santai.',
-    fullDescription: `Hoodie eksklusif yang menampilkan motif tribal Papua asli. Dikombinasikan dengan desain modern, menciptakan harmoni sempurna antara tradisi dan kontemporer.
-
-Spesifikasi:
-- Bahan: 80% Cotton, 20% Polyester
-- Fit: Relaxed fit
-- Warna: Hijau Forest
-- Ukuran: XS, S, M, L, XL, XXL
-- Berat: 280 gsm
-- Kantong depan tersedia
-
-Fitur:
-- Drawstring berkualitas
-- Jahitan yang rapi
-- Tahan lama`,
-    sizes: ['S', 'M', 'L', 'XL', 'XXL'],
     inStock: true,
   },
   3: {
@@ -110,24 +87,190 @@ Cara Penggunaan:
     sizes: ['One Size'],
     inStock: true,
   },
+  5: {
+    id: 5,
+    name: 'Kaos Wayang Papua',
+    price: 159000,
+    category: 'Pakaian',
+    image: 'https://images.unsplash.com/photo-1503341455253-b2e723bb12dd?w=600&h=600&fit=crop',
+    rating: 5,
+    reviews: 15,
+    description: 'Kaos dengan desain wayang Papua yang bernilai seni tinggi. Terbuat dari cotton berkualitas.',
+    fullDescription: `Kaos istimewa menampilkan desain perpaduan seni Wayang dan ornamen khas Papua.
+
+Spesifikasi:
+- Bahan: Cotton Combed 30s
+- Sablon: Discharge (Cabut Warna) lembut di kulit
+- Warna: Hitam
+- Ukuran: S, M, L, XL, XXL`,
+    sizes: ['S', 'M', 'L', 'XL', 'XXL'],
+    inStock: true,
+  },
+  7: {
+    id: 7,
+    name: 'Tas Noken Kulit',
+    price: 249000,
+    category: 'Tas Noken',
+    image: 'https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?w=600&h=600&fit=crop',
+    rating: 5,
+    reviews: 9,
+    description: 'Tas noken tradisional dengan sentuhan kulit sapi asli untuk ketahanan ekstra.',
+    fullDescription: `Perpaduan unik antara anyaman serat pohon tradisional Papua dengan aksen kulit sapi asli premium, menghasilkan tas noken yang modern dan elegan.
+
+Spesifikasi:
+- Bahan: Serat kayu alami & Kulit Sapi Asli
+- Warna: Natural & Cokelat Tan
+- Ukuran: Medium`,
+    sizes: ['One Size'],
+    inStock: true,
+  },
+  8: {
+    id: 8,
+    name: 'Kalung Batu Mulia',
+    price: 129000,
+    category: 'Aksesoris',
+    image: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=600&h=600&fit=crop',
+    rating: 5,
+    reviews: 7,
+    description: 'Kalung premium dengan ornamen batu mulia khas Papua yang indah.',
+    fullDescription: `Kalung buatan tangan dengan liontin batu mulia asli dari alam Papua. Setiap batu memiliki corak unik yang alami.
+
+Spesifikasi:
+- Bahan: Tali kulit premium & Batu mulia asli Papua
+- Panjang tali: Adjustable (dapat diatur)`,
+    sizes: ['One Size'],
+    inStock: true,
+  },
+  9: {
+    id: 9,
+    name: 'Hoodie Papua Indonesia',
+    price: 329000,
+    category: 'Pakaian',
+    image: '/hoodie-papua-indonesia.jpg',
+    rating: 5,
+    reviews: 12,
+    description: 'Hoodie nyaman dengan desain eksklusif peta Papua dan pesan kebanggaan nasional.',
+    fullDescription: `Hoodie Maroon premium "Dari Papua Untuk Indonesia". Didesain dengan penuh kebanggaan menampilkan siluet pulau Papua yang elegan.
+
+Spesifikasi:
+- Bahan: 100% Cotton Fleece Premium
+- Sablon: Plastisol kualitas tinggi
+- Warna: Maroon
+- Ukuran: S, M, L, XL, XXL
+- Fitur: Kupluk dengan tali serut, kantong kanguru depan.`,
+    sizes: ['S', 'M', 'L', 'XL', 'XXL'],
+    inStock: true,
+  },
+  10: {
+    id: 10,
+    name: 'Hoodie Bumi Papua',
+    price: 349000,
+    category: 'Pakaian',
+    image: '/hoodie-bumi-papua.jpg',
+    rating: 5,
+    reviews: 8,
+    description: 'Hoodie edisi khusus dengan sablon emas peta Papua dari bumi Papua.',
+    fullDescription: `Hoodie Charcoal premium "Dari Bumi Papua". Desain artistik berlapis warna emas berkilau yang melambangkan kekayaan alam bumi Papua.
+
+Spesifikasi:
+- Bahan: Heavyweight Cotton Fleece
+- Sablon: Gold Metallic Foil Premium
+- Warna: Charcoal / Abu-abu Gelap
+- Ukuran: S, M, L, XL, XXL
+- Fitur: Jahitan double-needle, ketebalan ekstra untuk kehangatan maksimal.`,
+    sizes: ['S', 'M', 'L', 'XL', 'XXL'],
+    inStock: true,
+  },
 };
+
+const getResolvedSrc = (raw?: string) => {
+  if (!raw) return '/placeholder.svg';
+  if (raw.startsWith('http://') || raw.startsWith('https://')) return raw;
+  if (raw.startsWith('/')) return raw;
+  return `/uploads/${raw}`;
+};
+
+interface Product {
+  id: number;
+  name: string;
+  price: number;
+  category: string;
+  image: string;
+  rating: number;
+  reviews: number;
+  description: string;
+  fullDescription: string;
+  sizes: string[];
+  inStock: boolean;
+}
 
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { addToCart } = useCart();
-  const product = PRODUCTS[id as keyof typeof PRODUCTS];
+  const { toggleWishlist, isInWishlist } = useWishlist();
 
-  // Initialize all hooks at the top level, unconditionally
+  const [product, setProduct] = useState<Product | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [selectedSize, setSelectedSize] = useState('One Size');
   const [addedToCart, setAddedToCart] = useState(false);
   const [reviewRefreshTrigger, setReviewRefreshTrigger] = useState(0);
   const reviewsRef = useRef<HTMLDivElement>(null);
 
+  // ─── Fetch product from database ──────────────────────────────────────────
+  useEffect(() => {
+    const fetchProduct = async () => {
+      if (!id) return;
+      setIsLoading(true);
+      try {
+        const res = await fetch(`/api/products/${id}`);
+        const data = await res.json();
+        if (data.success && data.data) {
+          const item = data.data;
+          const mappedProduct: Product = {
+            id: Number(item.id),
+            name: item.name,
+            price: Number(item.price),
+            category: item.category || 'Pakaian',
+            image: item.image,
+            rating: item.rating !== undefined ? item.rating : 5,
+            reviews: item.reviewCount !== undefined ? item.reviewCount : 0,
+            description: item.description || '',
+            fullDescription: item.description || '',
+            sizes: item.sizes || ['S', 'M', 'L', 'XL'],
+            inStock: item.stock !== undefined ? (item.stock > 0) : item.in_stock,
+          };
+          setProduct(mappedProduct);
+        } else {
+          // Fallback to static PRODUCTS
+          const fallback = PRODUCTS[Number(id) as keyof typeof PRODUCTS];
+          if (fallback) {
+            setProduct(fallback as any);
+          } else {
+            setProduct(null);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch product:', err);
+        // Fallback to static PRODUCTS
+        const fallback = PRODUCTS[Number(id) as keyof typeof PRODUCTS];
+        if (fallback) {
+          setProduct(fallback as any);
+        } else {
+          setProduct(null);
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProduct();
+  }, [id]);
+
   // Update selected size when product changes
   useEffect(() => {
-    if (product && product.sizes.length > 0) {
+    if (product && product.sizes && product.sizes.length > 0) {
       setSelectedSize(product.sizes[0]);
     }
   }, [product?.id]);
@@ -143,6 +286,7 @@ export default function ProductDetail() {
         quantity,
         size: selectedSize,
       });
+      toast.success(`${product.name} (${selectedSize}) ditambahkan ke keranjang`);
       setAddedToCart(true);
       setTimeout(() => setAddedToCart(false), 2000);
     }
@@ -157,6 +301,17 @@ export default function ProductDetail() {
       reviewsRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, 500);
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-white">
+        <Navigation />
+        <div className="flex items-center justify-center min-h-[400px]">
+          <p className="text-lg text-muted-foreground animate-pulse">Memuat detail produk...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!product) {
     return (
@@ -174,12 +329,21 @@ export default function ProductDetail() {
       <Navigation />
 
       <div className="max-w-7xl mx-auto px-4 py-12">
+        {/* Back Button */}
+        <button
+          onClick={() => navigate(-1)}
+          className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors mb-6 font-semibold text-sm group"
+        >
+          <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
+          Kembali
+        </button>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
           {/* Product Image */}
           <div className="flex items-center justify-center">
             <div className="w-full aspect-square bg-gray-100 rounded-xl overflow-hidden">
               <img
-                src={product.image}
+                src={getResolvedSrc(product.image)}
                 alt={product.name}
                 className="w-full h-full object-cover"
               />
@@ -213,7 +377,7 @@ export default function ProductDetail() {
             {/* Price */}
             <div className="mb-8">
               <p className="text-5xl font-bold text-primary mb-2">
-                Rp {product.price.toLocaleString('id-ID')}
+                Rp {Number(product.price).toLocaleString('id-ID')}
               </p>
               <p className="text-muted-foreground">
                 {product.inStock ? (
@@ -297,10 +461,49 @@ export default function ProductDetail() {
                   </>
                 )}
               </button>
-              <button className="px-6 py-4 border-2 border-gray-300 rounded-lg hover:border-primary transition-colors">
-                <Heart className="w-5 h-5 text-foreground hover:text-primary transition-colors" />
+              <button
+                onClick={() => {
+                  if (product) {
+                    toggleWishlist({
+                      id: product.id,
+                      name: product.name,
+                      price: product.price,
+                      image: product.image,
+                      category: product.category,
+                    });
+                  }
+                }}
+                className={`px-6 py-4 border-2 rounded-lg transition-all duration-300 ${
+                  isInWishlist(product.id)
+                    ? 'border-red-400 bg-red-50'
+                    : 'border-gray-300 hover:border-primary'
+                }`}
+                title={isInWishlist(product.id) ? 'Hapus dari wishlist' : 'Tambah ke wishlist'}
+              >
+                <Heart
+                  className={`w-5 h-5 transition-colors ${
+                    isInWishlist(product.id)
+                      ? 'fill-red-500 text-red-500'
+                      : 'text-foreground hover:text-primary'
+                  }`}
+                />
               </button>
-              <button className="px-6 py-4 border-2 border-gray-300 rounded-lg hover:border-primary transition-colors">
+              <button
+                onClick={() => {
+                  if (navigator.share) {
+                    navigator.share({
+                      title: product.name,
+                      text: product.description,
+                      url: window.location.href,
+                    });
+                  } else {
+                    navigator.clipboard.writeText(window.location.href);
+                    toast.success('Tautan produk berhasil disalin!');
+                  }
+                }}
+                className="px-6 py-4 border-2 border-gray-300 rounded-lg hover:border-primary transition-colors"
+                title="Bagikan produk"
+              >
                 <Share2 className="w-5 h-5 text-foreground hover:text-primary transition-colors" />
               </button>
             </div>
@@ -369,6 +572,8 @@ export default function ProductDetail() {
           </div>
         </div>
       </div>
+
+      <Footer />
     </div>
   );
 }

@@ -16,7 +16,6 @@ export default function Login() {
     setError('');
     setLoading(true);
 
-    // Simulate login - in production, validate against backend
     if (!email || !password) {
       setError('Email dan password harus diisi');
       setLoading(false);
@@ -29,13 +28,42 @@ export default function Login() {
       return;
     }
 
-    // Simulate API call
-    setTimeout(() => {
-      const user = { email, name: email.split('@')[0] };
-      localStorage.setItem('noken-user', JSON.stringify(user));
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await response.json();
+
+      if (data.success) {
+        const user = data.data.user;
+        const token = data.data.token;
+
+        if (user.role === 'admin') {
+          // Simpan token admin & user admin
+          localStorage.setItem('noken-admin-token', token);
+          localStorage.setItem('noken-admin', JSON.stringify(user));
+          setLoading(false);
+          navigate('/admin/orders');
+        } else {
+          // Simpan token user & user biasa
+          localStorage.setItem('noken-token', token);
+          localStorage.setItem('noken-user', JSON.stringify(user));
+          // Beritahu context bahwa user sudah login (custom event untuk tab yang sama)
+          window.dispatchEvent(new CustomEvent('noken-login', { detail: { token } }));
+          setLoading(false);
+          navigate('/');
+        }
+      } else {
+        setError(data.message || 'Email atau password salah');
+        setLoading(false);
+      }
+    } catch (err) {
+      console.error('Login error:', err);
+      setError('Gagal terhubung ke server');
       setLoading(false);
-      navigate('/');
-    }, 1000);
+    }
   };
 
   return (
@@ -113,13 +141,6 @@ export default function Login() {
             Daftar sekarang
           </Link>
         </p>
-
-        {/* Demo Credentials */}
-        <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <p className="text-xs font-semibold text-blue-900 mb-2">Demo Credentials:</p>
-          <p className="text-xs text-blue-800">Email: demo@example.com</p>
-          <p className="text-xs text-blue-800">Password: demo123</p>
-        </div>
       </div>
     </div>
   );

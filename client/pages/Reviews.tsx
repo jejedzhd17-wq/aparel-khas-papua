@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Navigation from '@/components/Navigation';
+import Footer from '@/components/Footer';
 import StarRating from '@/components/StarRating';
 import { Send, Filter, TrendingUp } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface Review {
   id: number;
@@ -21,42 +23,37 @@ interface Product {
   category: string;
 }
 
-// Mock products
-const PRODUCTS: Product[] = [
+const getResolvedSrc = (raw?: string) => {
+  if (!raw) return '/placeholder.svg';
+  if (raw.startsWith('http://') || raw.startsWith('https://')) return raw;
+  if (raw.startsWith('/')) return raw;
+  return `/uploads/${raw}`;
+};
+
+// Fallback mock products
+const DEFAULT_PRODUCTS: Product[] = [
   {
     id: 1,
     name: 'Kaos Raja Ampat',
     image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=100&h=100&fit=crop',
-    category: 'Kaos',
+    category: 'Pakaian',
   },
   {
-    id: 2,
-    name: 'Hoodie Papua Tribal',
-    image: 'https://images.unsplash.com/photo-1556821552-919ad7b37f69?w=100&h=100&fit=crop',
-    category: 'Hoodie',
+    id: 9,
+    name: 'Hoodie Papua Indonesia',
+    image: '/hoodie-papua-indonesia.jpg',
+    category: 'Pakaian',
   },
   {
     id: 3,
     name: 'Tas Noken Original',
     image: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=100&h=100&fit=crop',
-    category: 'Tas',
-  },
-  {
-    id: 4,
-    name: 'Gelang Tradisional',
-    image: 'https://images.unsplash.com/photo-1515617293615-121f0c5c1241?w=100&h=100&fit=crop',
-    category: 'Aksesoris',
-  },
-  {
-    id: 5,
-    name: 'Kaos Wayang Papua',
-    image: 'https://images.unsplash.com/photo-1503341455253-b2e723bb12dd?w=100&h=100&fit=crop',
-    category: 'Kaos',
+    category: 'Tas Noken',
   },
 ];
 
-// Mock reviews
-const MOCK_REVIEWS: Review[] = [
+// Fallback mock reviews
+const DEFAULT_REVIEWS: Review[] = [
   {
     id: 1,
     productId: 1,
@@ -64,72 +61,68 @@ const MOCK_REVIEWS: Review[] = [
     productImage: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=100&h=100&fit=crop',
     userName: 'Budi Santoso',
     rating: 5,
-    comment:
-      'Sangat puas dengan kualitas kaosnya! Desainnya indah dan bahannya nyaman dipakai. Akan beli lagi!',
+    comment: 'Sangat puas dengan kualitas kaosnya! Desainnya indah dan bahannya nyaman dipakai.',
     date: '2024-01-15',
-  },
-  {
-    id: 2,
-    productId: 2,
-    productName: 'Hoodie Papua Tribal',
-    productImage: 'https://images.unsplash.com/photo-1556821552-919ad7b37f69?w=100&h=100&fit=crop',
-    userName: 'Siti Nurhaliza',
-    rating: 4,
-    comment:
-      'Hoodie bagus dan nyaman. Hanya saja sizing sedikit kebesaran, tapi overall sangat memuaskan.',
-    date: '2024-01-12',
-  },
-  {
-    id: 3,
-    productId: 3,
-    productName: 'Tas Noken Original',
-    productImage: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=100&h=100&fit=crop',
-    userName: 'Ahmad Wijaya',
-    rating: 5,
-    comment:
-      'Tas noken asli berkualitas tinggi. Desain tradisional yang sempurna dan bahan sangat kuat. Rekomendasi untuk semua!',
-    date: '2024-01-10',
-  },
-  {
-    id: 4,
-    productId: 1,
-    productName: 'Kaos Raja Ampat',
-    productImage: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=100&h=100&fit=crop',
-    userName: 'Dewi Lestari',
-    rating: 4,
-    comment: 'Kaos berkualitas dengan desain yang unik. Warna cerah dan tidak mudah pudar.',
-    date: '2024-01-08',
-  },
-  {
-    id: 5,
-    productId: 4,
-    productName: 'Gelang Tradisional',
-    productImage: 'https://images.unsplash.com/photo-1515617293615-121f0c5c1241?w=100&h=100&fit=crop',
-    userName: 'Rinto Harahap',
-    rating: 5,
-    comment: 'Gelang sangat indah dan autentik. Craftsmanship nya luar biasa. Nilai jual beli sangat fair!',
-    date: '2024-01-05',
-  },
-  {
-    id: 6,
-    productId: 2,
-    productName: 'Hoodie Papua Tribal',
-    productImage: 'https://images.unsplash.com/photo-1556821552-919ad7b37f69?w=100&h=100&fit=crop',
-    userName: 'Maya Kusuma',
-    rating: 3,
-    comment: 'Desainnya bagus tapi harga agak mahal. Kualitas okaylah untuk harganya.',
-    date: '2024-01-02',
   },
 ];
 
 export default function Reviews() {
-  const [reviews, setReviews] = useState<Review[]>(MOCK_REVIEWS);
+  const [products, setProducts] = useState<Product[]>(DEFAULT_PRODUCTS);
+  const [reviews, setReviews] = useState<Review[]>(DEFAULT_REVIEWS);
   const [filterProduct, setFilterProduct] = useState<number | null>(null);
   const [sortBy, setSortBy] = useState<'newest' | 'rating'>('newest');
   const [rating, setRating] = useState<number>(0);
   const [selectedProduct, setSelectedProduct] = useState<number | null>(null);
   const [comment, setComment] = useState('');
   const [userName, setUserName] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+
+  const loadData = async () => {
+    setIsLoading(true);
+    try {
+      // Fetch Products
+      const prodRes = await fetch('/api/products');
+      const prodData = await prodRes.json();
+      if (prodData.success && prodData.data) {
+        setProducts(prodData.data);
+      }
+
+      // Fetch Reviews
+      const revRes = await fetch('/api/reviews');
+      const revData = await revRes.json();
+      if (revData.success && revData.data) {
+        setReviews(
+          revData.data.map((r: any) => ({
+            id: r.id,
+            productId: r.productId,
+            productName: r.productName || 'Produk',
+            productImage: r.productImage || '/placeholder.svg',
+            userName: r.userName || 'Pelanggan',
+            rating: r.rating,
+            comment: r.comment || '',
+            date: r.date || new Date().toISOString().split('T')[0],
+          }))
+        );
+      }
+    } catch (err) {
+      console.error('Failed to load reviews data:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadData();
+    const savedUser = localStorage.getItem('noken-user');
+    if (savedUser) {
+      try {
+        const parsed = JSON.parse(savedUser);
+        setUserName(parsed.name || '');
+      } catch {}
+    }
+  }, []);
+
+  const isLoggedIn = !!localStorage.getItem('noken-token');
 
   // Filter and sort reviews
   const filteredReviews = reviews
@@ -145,7 +138,7 @@ export default function Reviews() {
   // Calculate average rating per product
   const getAverageRating = (productId: number) => {
     const productReviews = reviews.filter((r) => r.productId === productId);
-    if (productReviews.length === 0) return 0;
+    if (productReviews.length === 0) return '0.0';
     const total = productReviews.reduce((sum, r) => sum + r.rating, 0);
     return (total / productReviews.length).toFixed(1);
   };
@@ -154,33 +147,47 @@ export default function Reviews() {
     return reviews.filter((r) => r.productId === productId).length;
   };
 
-  const handleSubmitReview = (e: React.FormEvent) => {
+  const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!userName || !selectedProduct || rating === 0 || !comment.trim()) {
-      alert('Lengkapi semua field');
+    const token = localStorage.getItem('noken-token');
+    if (!token) {
+      toast.error('Silakan login terlebih dahulu untuk menulis review');
       return;
     }
 
-    const product = PRODUCTS.find((p) => p.id === selectedProduct);
-    if (!product) return;
+    if (!userName || !selectedProduct || rating === 0 || !comment.trim()) {
+      toast.warning('Silakan lengkapi semua bidang ulasan!');
+      return;
+    }
 
-    const newReview: Review = {
-      id: Math.max(...reviews.map((r) => r.id), 0) + 1,
-      productId: selectedProduct,
-      productName: product.name,
-      productImage: product.image,
-      userName,
-      rating,
-      comment,
-      date: new Date().toISOString().split('T')[0],
-    };
-
-    setReviews([newReview, ...reviews]);
-    setUserName('');
-    setSelectedProduct(null);
-    setRating(0);
-    setComment('');
+    try {
+      const res = await fetch('/api/reviews', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          productId: selectedProduct,
+          userName,
+          rating,
+          comment,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success('Ulasan Anda berhasil dikirim! Terima kasih.');
+        setSelectedProduct(null);
+        setRating(0);
+        setComment('');
+        loadData(); // reload
+      } else {
+        toast.error(data.message || 'Gagal mengirim ulasan');
+      }
+    } catch (err) {
+      toast.error('Gagal mengirim ulasan');
+    }
   };
 
   return (
@@ -209,6 +216,12 @@ export default function Reviews() {
               </h2>
 
               <form onSubmit={handleSubmitReview} className="space-y-4">
+                {/* Warning Login */}
+                {!isLoggedIn && (
+                  <div className="p-3 bg-amber-50 border border-amber-200 text-amber-800 rounded-lg text-xs font-semibold">
+                    Silakan login terlebih dahulu untuk mengirim review.
+                  </div>
+                )}
                 {/* Name Field */}
                 <div>
                   <label className="block text-sm font-semibold text-foreground mb-2">
@@ -218,8 +231,9 @@ export default function Reviews() {
                     type="text"
                     value={userName}
                     onChange={(e) => setUserName(e.target.value)}
-                    placeholder="Nama"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                    placeholder={isLoggedIn ? "" : "Silakan login terlebih dahulu"}
+                    disabled={true}
+                    className="w-full px-4 py-2 border border-gray-200 bg-gray-50 text-gray-500 rounded-lg focus:outline-none text-sm cursor-not-allowed font-medium"
                   />
                 </div>
 
@@ -234,7 +248,7 @@ export default function Reviews() {
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
                   >
                     <option value="">-- Pilih Produk --</option>
-                    {PRODUCTS.map((product) => (
+                    {products.map((product) => (
                       <option key={product.id} value={product.id}>
                         {product.name}
                       </option>
@@ -271,7 +285,10 @@ export default function Reviews() {
 
                 <button
                   type="submit"
-                  className="w-full bg-primary text-white font-semibold py-3 rounded-lg hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
+                  disabled={!isLoggedIn}
+                  className={`w-full font-semibold py-3 rounded-lg transition-colors flex items-center justify-center gap-2 text-white ${
+                    isLoggedIn ? 'bg-primary hover:bg-primary/90' : 'bg-gray-300 cursor-not-allowed text-gray-500'
+                  }`}
                 >
                   <Send className="w-4 h-4" />
                   Kirim Review
@@ -296,7 +313,7 @@ export default function Reviews() {
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
                   >
                     <option value="">Semua Produk</option>
-                    {PRODUCTS.map((product) => (
+                    {products.map((product) => (
                       <option key={product.id} value={product.id}>
                         {product.name}
                       </option>
@@ -349,7 +366,7 @@ export default function Reviews() {
                       {/* Product Image */}
                       <div className="flex-shrink-0">
                         <img
-                          src={review.productImage}
+                          src={getResolvedSrc(review.productImage)}
                           alt={review.productName}
                           className="w-16 h-16 object-cover rounded-lg"
                         />
@@ -359,7 +376,7 @@ export default function Reviews() {
                       <div className="flex-1">
                         {/* Header */}
                         <div className="mb-3">
-                          <div className="flex items-start justify-between mb-2">
+                          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-2 gap-1">
                             <div>
                               <p className="font-semibold text-foreground text-sm">
                                 {review.userName}
@@ -405,7 +422,7 @@ export default function Reviews() {
                   Rating Produk
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {PRODUCTS.map((product) => {
+                  {products.map((product) => {
                     const reviewCount = getReviewCount(product.id);
                     if (reviewCount === 0) return null;
 
@@ -416,7 +433,7 @@ export default function Reviews() {
                       >
                         <div className="flex items-center gap-3 mb-2">
                           <img
-                            src={product.image}
+                            src={getResolvedSrc(product.image)}
                             alt={product.name}
                             className="w-10 h-10 object-cover rounded"
                           />
@@ -444,6 +461,8 @@ export default function Reviews() {
           </div>
         </div>
       </div>
+
+      <Footer />
     </div>
   );
 }

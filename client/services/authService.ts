@@ -114,6 +114,7 @@ export function getCurrentUser(): LoggedInUser | null {
 // Logout user
 export function logout(): void {
   localStorage.removeItem(CURRENT_USER_KEY);
+  localStorage.removeItem('noken-token');
 }
 
 // Check if user is authenticated

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useEffect } from 'react';
 
 interface ThemeContextType {
   isDark: boolean;
@@ -8,33 +8,14 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [isDark, setIsDark] = useState(false);
-
-  // Load theme preference from localStorage
+  // Force light mode always — remove dark class and clear saved preference
   useEffect(() => {
-    const savedTheme = localStorage.getItem('noken-theme');
-    if (savedTheme === 'dark') {
-      setIsDark(true);
-      document.documentElement.classList.add('dark');
-    }
+    document.documentElement.classList.remove('dark');
+    localStorage.removeItem('noken-theme');
   }, []);
 
-  const toggleTheme = () => {
-    setIsDark((prev) => {
-      const newTheme = !prev;
-      if (newTheme) {
-        document.documentElement.classList.add('dark');
-        localStorage.setItem('noken-theme', 'dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-        localStorage.setItem('noken-theme', 'light');
-      }
-      return newTheme;
-    });
-  };
-
   return (
-    <ThemeContext.Provider value={{ isDark, toggleTheme }}>
+    <ThemeContext.Provider value={{ isDark: false, toggleTheme: () => {} }}>
       {children}
     </ThemeContext.Provider>
   );
