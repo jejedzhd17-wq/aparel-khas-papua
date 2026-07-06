@@ -133,12 +133,13 @@ export default function Index() {
       {/* Hero Section */}
       <section className="relative h-[600px] md:h-[800px] overflow-hidden bg-[#0a0a0a]">
         {/* Background Video */}
-        <div className="absolute inset-0">
+        <div className="absolute inset-0" style={{ backgroundImage: 'url(/papua-hero.jpg)', backgroundSize: 'cover', backgroundPosition: 'center' }}>
           <video
             autoPlay
             loop
             muted
             playsInline
+            poster="/papua-hero.jpg"
             className="w-full h-full object-cover"
           >
             <source src="/rajaampat3.mp4" type="video/mp4" />
