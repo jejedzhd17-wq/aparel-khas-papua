@@ -284,7 +284,7 @@ export default function Index() {
       <section
         className="relative py-28 px-4 overflow-hidden"
         style={{
-          backgroundImage: "url('/papua-motif.png')",
+          backgroundImage: "url('/papua-motif.jpg')",
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',
@@ -348,6 +348,7 @@ export default function Index() {
                 <img
                   src={photo.src}
                   alt={photo.alt}
+                  loading="lazy"
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/5 to-transparent" />
