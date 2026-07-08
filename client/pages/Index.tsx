@@ -131,7 +131,8 @@ export default function Index() {
       <Navigation />
 
       {/* Hero Section */}
-      <section className="relative h-[600px] md:h-[800px] overflow-hidden bg-[#0a0a0a]">
+      <section className="relative h-[600px] md:h-[800px] overflow-hidden"
+        style={{ background: 'linear-gradient(135deg, #1a0a00 0%, #2d1a0a 30%, #0d1f2d 70%, #0a1a1a 100%)' }}>
         {/* Background Video */}
         <div className="absolute inset-0">
           <video
@@ -139,6 +140,7 @@ export default function Index() {
             loop
             muted
             playsInline
+            preload="auto"
             className="w-full h-full object-cover"
           >
             <source src="/rajaampat3.mp4" type="video/mp4" />
