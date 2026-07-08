@@ -19,6 +19,8 @@ import reviewRoutes from "./routes/reviewRoutes.js";
 import dashboardRoutes from "./routes/dashboardRoutes.js";
 import bankAccountRoutes from "./routes/bankAccountRoutes.js";
 
+import os from "os";
+
 export function createServer() {
   const app = express();
 
@@ -31,7 +33,9 @@ export function createServer() {
   app.use(express.urlencoded({ extended: true }));
 
   // Static route untuk upload gambar produk & bukti bayar
-  app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
+  const isServerless = process.env.NETLIFY || process.env.LAMBDA_TASK_ROOT || process.env.NODE_ENV === "production";
+  const uploadDir = isServerless ? path.join(os.tmpdir(), "uploads") : path.join(process.cwd(), "uploads");
+  app.use("/uploads", express.static(uploadDir));
 
   // Register API Routes
   app.use("/api/auth", authRoutes);

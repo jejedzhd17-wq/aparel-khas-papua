@@ -2,8 +2,12 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 
-// Pastikan folder uploads ada
-const uploadDir = 'uploads';
+import os from 'os';
+
+// Pastikan folder uploads ada (gunakan folder temp jika di serverless/Netlify)
+const isServerless = process.env.NETLIFY || process.env.LAMBDA_TASK_ROOT || process.env.NODE_ENV === 'production';
+const uploadDir = isServerless ? path.join(os.tmpdir(), 'uploads') : 'uploads';
+
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
