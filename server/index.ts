@@ -53,6 +53,30 @@ export function createServer() {
     res.json({ message: ping });
   });
 
+  app.get("/api/db-test", async (_req, res) => {
+    try {
+      const { default: pool } = await import("./config/db.js");
+      const [rows] = await pool.query("SELECT 1 + 1 as result");
+      res.json({
+        success: true,
+        message: "Database connected successfully!",
+        db_host: process.env.DB_HOST,
+        db_name: process.env.DB_NAME,
+        db_user: process.env.DB_USER,
+        result: rows[0].result
+      });
+    } catch (err) {
+      res.status(500).json({
+        success: false,
+        message: "Database connection failed!",
+        error: err.message,
+        db_host: process.env.DB_HOST,
+        db_name: process.env.DB_NAME,
+        db_user: process.env.DB_USER
+      });
+    }
+  });
+
   app.get("/api/demo", handleDemo);
 
   return app;
