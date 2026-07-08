@@ -57,7 +57,7 @@ export function createServer() {
     res.json({ message: ping });
   });
 
-  app.get("/api/db-test", async (_req, res) => {
+  app.all("/api/db-test", async (req, res) => {
     try {
       const { default: pool } = await import("./config/db.js");
       const [rows] = await pool.query("SELECT 1 + 1 as result");
@@ -67,7 +67,11 @@ export function createServer() {
         db_host: process.env.DB_HOST,
         db_name: process.env.DB_NAME,
         db_user: process.env.DB_USER,
-        result: rows[0].result
+        result: rows[0].result,
+        method: req.method,
+        bodyType: typeof req.body,
+        body: req.body,
+        headers: req.headers
       });
     } catch (err) {
       res.status(500).json({
@@ -76,7 +80,11 @@ export function createServer() {
         error: err.message,
         db_host: process.env.DB_HOST,
         db_name: process.env.DB_NAME,
-        db_user: process.env.DB_USER
+        db_user: process.env.DB_USER,
+        method: req.method,
+        bodyType: typeof req.body,
+        body: req.body,
+        headers: req.headers
       });
     }
   });
