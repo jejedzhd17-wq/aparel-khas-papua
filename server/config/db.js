@@ -13,6 +13,10 @@ const pool = mysql.createPool({
   connectionLimit: 10,
   queueLimit: 0,
   timezone: '+07:00',
+  // SSL untuk cloud database (Clever Cloud, PlanetScale, dll)
+  ssl: process.env.DB_HOST && process.env.DB_HOST !== 'localhost'
+    ? { rejectUnauthorized: false }
+    : undefined,
 });
 
 // Test koneksi saat startup

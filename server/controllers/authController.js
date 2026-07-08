@@ -45,10 +45,13 @@ export const register = async (req, res) => {
       });
     }
 
-    // Simpan user ke database (password disimpan apa adanya untuk demo)
+    // Hash password dengan bcrypt
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Simpan user ke database
     const [result] = await pool.query(
       'INSERT INTO users (nama, email, password, role, alamat, no_hp) VALUES (?, ?, ?, ?, ?, ?)',
-      [name, email.toLowerCase(), password, 'user', address || null, phone || null]
+      [name, email.toLowerCase(), hashedPassword, 'user', address || null, phone || null]
     );
 
     const userId = result.insertId;
@@ -130,12 +133,17 @@ export const login = async (req, res) => {
       });
     }
 
-    // Verifikasi password — user pakai plain text, admin pakai bcrypt
+    // Verifikasi password — kedua tabel pakai bcrypt
     let isPasswordValid;
     if (user.role === 'admin') {
       isPasswordValid = await bcrypt.compare(password, user.password);
     } else {
-      isPasswordValid = (password === user.password);
+      // Coba bcrypt dulu (user baru), fallback plain text (user lama sebelum fix)
+      try {
+        isPasswordValid = await bcrypt.compare(password, user.password);
+      } catch {
+        isPasswordValid = (password === user.password);
+      }
     }
     if (!isPasswordValid) {
       return res.status(401).json({
