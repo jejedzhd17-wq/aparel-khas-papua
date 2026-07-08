@@ -10,7 +10,7 @@ const pool = mysql.createPool({
   password: process.env.DB_PASSWORD || '',
   database: process.env.DB_NAME || 'apparel_papua',
   waitForConnections: true,
-  connectionLimit: 10,
+  connectionLimit: process.env.DB_HOST && process.env.DB_HOST !== 'localhost' ? 2 : 10,
   queueLimit: 0,
   timezone: '+07:00',
   // SSL untuk cloud database (Clever Cloud, PlanetScale, dll)
