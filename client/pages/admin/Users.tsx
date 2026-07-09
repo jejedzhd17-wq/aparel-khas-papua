@@ -4,6 +4,7 @@ import AdminLayout from '@/components/AdminLayout';
 import AdminTable from '@/components/AdminTable';
 import AdminModal from '@/components/AdminModal';
 import { Plus, AlertCircle } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface User {
   id: number;
@@ -87,12 +88,13 @@ export default function AdminUsers() {
       });
       const data = await res.json();
       if (data.success) {
+        toast.success('Pengguna berhasil dihapus');
         setUsers(users.filter((u) => u.id !== selectedUser.id));
       } else {
-        alert(data.message || 'Gagal menghapus');
+        toast.error(data.message || 'Gagal menghapus');
       }
     } catch {
-      alert('Gagal terhubung ke server');
+      toast.error('Gagal terhubung ke server');
     } finally {
       setShowDeleteConfirm(false);
       setSelectedUser(null);
@@ -109,8 +111,12 @@ export default function AdminUsers() {
           body: JSON.stringify({ name: formData.name, email: formData.email, role: formData.role, phone: formData.phone || undefined }),
         });
         const data = await res.json();
-        if (data.success) await loadUsers();
-        else alert(data.message || 'Gagal mengupdate');
+        if (data.success) {
+          toast.success('Pengguna berhasil diupdate');
+          await loadUsers();
+        } else {
+          toast.error(data.message || 'Gagal mengupdate');
+        }
       } else {
         const res = await fetch('/api/users', {
           method: 'POST',
@@ -118,11 +124,15 @@ export default function AdminUsers() {
           body: JSON.stringify({ name: formData.name, email: formData.email, role: formData.role, password: formData.password, phone: formData.phone || undefined }),
         });
         const data = await res.json();
-        if (data.success) await loadUsers();
-        else alert(data.message || 'Gagal membuat user');
+        if (data.success) {
+          toast.success('Pengguna baru berhasil ditambahkan');
+          await loadUsers();
+        } else {
+          toast.error(data.message || 'Gagal membuat user');
+        }
       }
     } catch {
-      alert('Gagal terhubung ke server');
+      toast.error('Gagal terhubung ke server');
     } finally {
       resetForm();
       setShowModal(false);

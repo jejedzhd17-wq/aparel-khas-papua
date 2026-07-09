@@ -12,7 +12,7 @@ interface AdminLayoutProps {
 }
 
 const navItems = [
-  { icon: Home,          label: 'Dasbor',    path: '/admin/dashboard' },
+  { icon: Home,          label: 'Dashboard',    path: '/admin/dashboard' },
   { icon: Package,       label: 'Produk',    path: '/admin/products' },
   { icon: Layers,        label: 'Kategori',  path: '/admin/categories' },
   { icon: ShoppingCart,  label: 'Pesanan',   path: '/admin/orders' },

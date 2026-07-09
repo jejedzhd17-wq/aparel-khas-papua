@@ -4,6 +4,7 @@ import AdminLayout from '@/components/AdminLayout';
 import AdminTable from '@/components/AdminTable';
 import AdminModal from '@/components/AdminModal';
 import { Plus } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface Category {
   id: number;
@@ -20,6 +21,10 @@ export default function AdminCategories() {
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [formData, setFormData] = useState({ name: '', description: '' });
 
+  const getAdminToken = () => {
+    return localStorage.getItem('noken-admin-token');
+  };
+
   useEffect(() => {
     const savedAdmin = localStorage.getItem('noken-admin');
     if (!savedAdmin) {
@@ -29,16 +34,22 @@ export default function AdminCategories() {
     loadCategories();
   }, [navigate]);
 
-  const loadCategories = () => {
+  const loadCategories = async () => {
     setIsLoading(true);
-    setTimeout(() => {
-      setCategories([
-        { id: 1, name: 'Pakaian', description: 'Kaos kasual dan hoodies premium bahan katun motif Papua', productCount: 20 },
-        { id: 3, name: 'Tas Noken', description: 'Tas Noken tradisional anyaman tangan asli', productCount: 6 },
-        { id: 4, name: 'Aksesoris', description: 'Gelang, kalung, dan gantungan kunci khas', productCount: 10 },
-      ]);
+    try {
+      const res = await fetch('/api/categories');
+      const data = await res.json();
+      if (data.success && data.data) {
+        setCategories(data.data);
+      } else {
+        toast.error(data.message || 'Gagal memuat kategori');
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('Terjadi kesalahan koneksi server');
+    } finally {
       setIsLoading(false);
-    }, 400);
+    }
   };
 
   const handleEdit = (category: Category) => {
@@ -47,35 +58,61 @@ export default function AdminCategories() {
     setShowModal(true);
   };
 
-  const handleDelete = (category: Category) => {
-    if (confirm(`Hapus kategori "${category.name}"?`)) {
-      setCategories(categories.filter((c) => c.id !== category.id));
+  const handleDelete = async (category: Category) => {
+    if (!confirm(`Hapus kategori "${category.name}"?`)) return;
+
+    try {
+      const token = getAdminToken();
+      const res = await fetch(`/api/categories/${category.id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success('Kategori berhasil dihapus');
+        loadCategories();
+      } else {
+        toast.error(data.message || 'Gagal menghapus kategori');
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('Gagal menghubungi server');
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (selectedCategory) {
-      setCategories(
-        categories.map((c) =>
-          c.id === selectedCategory.id ? { ...c, ...formData } : c
-        )
-      );
-    } else {
-      setCategories([
-        ...categories,
-        {
-          id: Math.max(...categories.map((c) => c.id), 0) + 1,
+    try {
+      const token = getAdminToken();
+      const method = selectedCategory ? 'PUT' : 'POST';
+      const url = selectedCategory ? `/api/categories/${selectedCategory.id}` : '/api/categories';
+      
+      const res = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
           name: formData.name,
           description: formData.description,
-          productCount: 0,
-        },
-      ]);
-    }
+        }),
+      });
 
-    resetForm();
-    setShowModal(false);
+      const data = await res.json();
+      if (data.success) {
+        toast.success(selectedCategory ? 'Kategori berhasil diupdate' : 'Kategori baru berhasil dibuat');
+        loadCategories();
+        setShowModal(false);
+        resetForm();
+      } else {
+        toast.error(data.message || 'Gagal menyimpan kategori');
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('Gagal menghubungi server');
+    }
   };
 
   const resetForm = () => {
