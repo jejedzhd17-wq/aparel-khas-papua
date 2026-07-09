@@ -22,7 +22,6 @@ import AdminDashboard from "./pages/admin/Dashboard";
 import AdminProducts from "./pages/admin/Products";
 import AdminCategories from "./pages/admin/Categories";
 import AdminOrders from "./pages/admin/Orders";
-import AdminShipments from "./pages/admin/Shipments";
 import AdminReviews from "./pages/admin/Reviews";
 import AdminUsers from "./pages/admin/Users";
 import AdminBankAccounts from "./pages/admin/BankAccounts";
@@ -92,7 +91,6 @@ function AnimatedRoutes() {
         <Route path="/admin/products" element={<AdminProducts />} />
         <Route path="/admin/categories" element={<AdminCategories />} />
         <Route path="/admin/orders" element={<AdminOrders />} />
-        <Route path="/admin/shipments" element={<AdminShipments />} />
         <Route path="/admin/reviews" element={<AdminReviews />} />
         <Route path="/admin/users" element={<AdminUsers />} />
         <Route path="/admin/bank-accounts" element={<AdminBankAccounts />} />

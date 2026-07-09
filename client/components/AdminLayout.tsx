@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
-  Menu, X, LogOut, Bell, Package, ShoppingCart, Truck,
+  Menu, X, LogOut, Bell, Package, ShoppingCart,
   MessageSquare, Users, Layers, Home, ChevronRight, Wallet
 } from 'lucide-react';
 
@@ -16,7 +16,6 @@ const navItems = [
   { icon: Package,       label: 'Produk',    path: '/admin/products' },
   { icon: Layers,        label: 'Kategori',  path: '/admin/categories' },
   { icon: ShoppingCart,  label: 'Pesanan',   path: '/admin/orders' },
-  { icon: Truck,         label: 'Kirim',     path: '/admin/shipments' },
   { icon: MessageSquare, label: 'Ulasan',    path: '/admin/reviews' },
   { icon: Users,         label: 'Pengguna',  path: '/admin/users' },
   { icon: Wallet,        label: 'Rekening',  path: '/admin/bank-accounts' },
