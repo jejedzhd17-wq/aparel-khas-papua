@@ -20,9 +20,7 @@ export default function AdminReviews() {
   const [isLoading, setIsLoading] = useState(true);
 
   const getAdminToken = () => {
-    const admin = localStorage.getItem('noken-admin');
-    if (!admin) return null;
-    return JSON.parse(admin).token;
+    return localStorage.getItem('noken-admin-token');
   };
 
   useEffect(() => {
