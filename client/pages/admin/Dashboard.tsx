@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import AdminLayout from '@/components/AdminLayout';
 import { Package, ShoppingCart, DollarSign, Clock, TrendingUp, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
+import { motion } from 'framer-motion';
 import {
   ResponsiveContainer,
   AreaChart,
@@ -149,10 +150,18 @@ export default function AdminDashboard() {
     <AdminLayout title="Dashboard" description="Ringkasan aktivitas toko Anda">
 
       {/* ── Stat Cards ── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
+      <motion.div
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: 'easeOut' }}
+        className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6"
+      >
         {stats.map((stat, idx) => (
-          <div
+          <motion.div
             key={idx}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.4, delay: idx * 0.08 }}
             className={`${stat.bgColor} rounded-xl p-4 border border-white/60 shadow-sm`}
           >
             <div className="flex items-center justify-between mb-2">
@@ -162,15 +171,20 @@ export default function AdminDashboard() {
             <p className={`text-lg sm:text-xl font-bold mt-0.5 ${stat.textColor} truncate`}>
               {stat.value}
             </p>
-          </div>
+          </motion.div>
         ))}
-      </div>
+      </motion.div>
 
       {/* ── Chart + Top Products ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
 
         {/* Chart */}
-        <div className="lg:col-span-2 bg-white rounded-xl border border-gray-200 p-4 sm:p-5 shadow-sm">
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5, delay: 0.2, ease: 'easeOut' }}
+          className="lg:col-span-2 bg-white rounded-xl border border-gray-200 p-4 sm:p-5 shadow-sm"
+        >
           <div className="flex items-center gap-2 mb-4">
             <TrendingUp className="w-4 h-4 text-primary" />
             <h2 className="text-sm font-bold text-gray-900">Tren Penjualan (7 Hari)</h2>
@@ -224,10 +238,15 @@ export default function AdminDashboard() {
               <p className="text-sm text-gray-400">Belum ada data penjualan</p>
             </div>
           )}
-        </div>
+        </motion.div>
 
         {/* Top Products */}
-        <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-5 shadow-sm">
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5, delay: 0.2, ease: 'easeOut' }}
+          className="bg-white rounded-xl border border-gray-200 p-4 sm:p-5 shadow-sm"
+        >
           <h2 className="text-sm font-bold text-gray-900 mb-4">Produk Terlaris</h2>
           <div className="space-y-3">
             {topProducts.length > 0 ? (
@@ -256,11 +275,16 @@ export default function AdminDashboard() {
               <p className="text-xs text-gray-400 text-center py-4">Belum ada produk terjual</p>
             )}
           </div>
-        </div>
+        </motion.div>
       </div>
 
       {/* ── Recent Orders ── */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.3, ease: 'easeOut' }}
+        className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden"
+      >
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
           <h2 className="text-sm font-bold text-gray-900">Pesanan Terbaru</h2>
           <button
@@ -328,7 +352,7 @@ export default function AdminDashboard() {
             </div>
           </>
         )}
-      </div>
+      </motion.div>
     </AdminLayout>
   );
 }

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import Timeline from '@/components/Timeline';
+import { motion } from 'framer-motion';
 import {
   Copy,
   Search,
@@ -151,20 +152,32 @@ export default function ShipmentTracking() {
         style={{ backgroundImage: "url('/papua-hero.jpg')" }}
       >
         <div className="absolute inset-0 bg-black/25" />
-        <div className="relative max-w-7xl mx-auto z-10">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: 'easeOut' }}
+          className="relative max-w-7xl mx-auto z-10"
+        >
           <h1 className="text-3xl md:text-5xl font-bold text-white mb-3 drop-shadow-[0_2px_8px_rgba(0,0,0,0.65)]">
             Lacak Pengiriman
           </h1>
           <p className="text-white/95 text-lg md:text-xl max-w-2xl font-medium drop-shadow-[0_2px_6px_rgba(0,0,0,0.6)]">
             Pantau status pengiriman pesanan Anda secara real-time
           </p>
-        </div>
+        </motion.div>
       </section>
 
       <div className="max-w-7xl mx-auto px-4 py-12">
 
         {/* ── Search by Resi (publik) ── */}
-        <form onSubmit={handleSearch} className="mb-8">
+        <motion.form
+          onSubmit={handleSearch}
+          className="mb-8"
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, ease: 'easeOut' }}
+        >
           <div className="flex flex-col sm:flex-row gap-3 max-w-2xl">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -209,7 +222,7 @@ export default function ShipmentTracking() {
               Tidak perlu login untuk melacak resi.
             </p>
           )}
-        </form>
+        </motion.form>
 
         {/* ── Loading ── */}
         {isLoading ? (
@@ -237,7 +250,12 @@ export default function ShipmentTracking() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
             {/* List Kiri */}
-            <div className="lg:col-span-1">
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, ease: 'easeOut' }}
+              className="lg:col-span-1"
+            >
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-base font-bold text-gray-900">
                   {isLoggedIn ? 'Pengiriman Saya' : 'Hasil Pencarian'}
@@ -283,10 +301,16 @@ export default function ShipmentTracking() {
                   );
                 })}
               </div>
-            </div>
+            </motion.div>
 
             {/* Detail Kanan */}
-            <div className="lg:col-span-2" ref={detailRef}>
+            <motion.div
+              ref={detailRef}
+              initial={{ opacity: 0, x: 30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.15, ease: 'easeOut' }}
+              className="lg:col-span-2"
+            >
               {selectedShipment ? (
                 <div className="space-y-5">
 
@@ -351,7 +375,7 @@ export default function ShipmentTracking() {
                   <p className="text-gray-500 text-base">Pilih pengiriman untuk melihat detail</p>
                 </div>
               )}
-            </div>
+            </motion.div>
 
           </div>
         )}

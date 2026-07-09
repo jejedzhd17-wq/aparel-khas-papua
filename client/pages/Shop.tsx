@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import { Star, ArrowRight, Search, Shirt } from 'lucide-react';
+import { motion } from 'framer-motion';
+
 
 // Custom SVG Icons dengan unsur etnik khas Papua untuk keempat kategori utama
 const KaosPapuaIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -258,7 +260,12 @@ export default function Shop() {
         style={{ backgroundImage: "url('/papua-shop.jpg')" }}
       >
         <div className="absolute inset-0 bg-black/45" />
-        <div className="relative max-w-7xl mx-auto z-10">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: 'easeOut' }}
+          className="relative max-w-7xl mx-auto z-10"
+        >
           <h1 className="text-3xl md:text-5xl font-bold text-white mb-3">
             Shop
           </h1>
@@ -277,17 +284,23 @@ export default function Shop() {
               className="w-full pl-10 pr-4 py-2 border border-white/30 bg-white/10 backdrop-blur-sm text-white placeholder-white/60 rounded-lg focus:outline-none focus:ring-2 focus:ring-white/50"
             />
           </div>
-        </div>
+        </motion.div>
       </section>
 
       <div className="max-w-7xl mx-auto px-4 py-12 md:py-16">
         {/* Category Cards */}
-        <div className="mb-16">
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-60px' }}
+          transition={{ duration: 0.7, ease: 'easeOut' }}
+          className="mb-16"
+        >
           <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-8 font-playfair">
             Telusuri Kategori
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-            {CATEGORIES.map((category) => (
+            {CATEGORIES.map((category, catIdx) => (
               <Link
                 key={category.slug}
                 to={`/category/${category.slug}`}
@@ -330,11 +343,16 @@ export default function Shop() {
             ))}
 
           </div>
-        </div>
+        </motion.div>
 
 
         {/* All Products */}
-        <div>
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-50px' }}
+          transition={{ duration: 0.7, ease: 'easeOut' }}
+        >
           <div className="flex items-center justify-between mb-8">
             <h2 className="text-2xl md:text-3xl font-bold text-foreground font-playfair">
               {searchQuery ? 'Hasil Pencarian' : 'Semua Produk'}
@@ -349,9 +367,15 @@ export default function Shop() {
             )}
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-8">
-            {filteredProducts.map((product) => (
-              <Link
+            {filteredProducts.map((product, pIdx) => (
+              <motion.div
                 key={product.id}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-30px' }}
+                transition={{ duration: 0.5, delay: (pIdx % 4) * 0.1, ease: 'easeOut' }}
+              >
+              <Link
                 to={`/product/${product.id}`}
                 className="group"
               >
@@ -395,6 +419,7 @@ export default function Shop() {
                   </div>
                 </div>
               </Link>
+              </motion.div>
             ))}
           </div>
 
@@ -419,7 +444,7 @@ export default function Shop() {
               <p>Menampilkan {filteredProducts.length} produk {searchQuery && `untuk "${searchQuery}"`}</p>
             </div>
           )}
-        </div>
+        </motion.div>
       </div>
 
       <Footer />
