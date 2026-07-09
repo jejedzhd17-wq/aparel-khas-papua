@@ -224,10 +224,9 @@ export default function Category() {
 
   useEffect(() => {
     if (!categoryInfo || !categorySlug) return;
-    
-    // Set local fallback products immediately so the category screen renders instantly
-    const fallbackProducts = ALL_PRODUCTS.filter(p => p.slug === categorySlug);
-    setProducts(fallbackProducts);
+
+    // Show skeleton immediately — don't flash stale local data
+    setProducts([]);
     setIsLoading(true);
 
     const fetchProducts = async () => {
@@ -235,7 +234,7 @@ export default function Category() {
         const dbCategoryName = SLUG_TO_DB_NAME[categorySlug] || '';
         const res = await fetch(`/api/products?category=${encodeURIComponent(dbCategoryName)}&limit=100`);
         const data = await res.json();
-        if (data.success && data.data) {
+        if (data.success && data.data && data.data.length > 0) {
           const mapped = data.data.map((p: any) => ({
             id: p.id,
             name: p.name || p.nama_produk,
@@ -245,15 +244,14 @@ export default function Category() {
             rating: p.rating ? Math.round(p.rating) : 5,
             slug: categorySlug,
           }));
-          
           setProducts(mapped);
         } else {
-          // If no dynamic data, keep fallback
-          setProducts(fallbackProducts);
+          // API returned empty — category truly has no products
+          setProducts([]);
         }
       } catch (err) {
         console.error("Gagal memuat produk kategori dari DB:", err);
-        setProducts(fallbackProducts);
+        setProducts([]);
       } finally {
         setIsLoading(false);
       }
