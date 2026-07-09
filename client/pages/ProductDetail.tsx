@@ -3,7 +3,7 @@ import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import ReviewList from '@/components/ReviewList';
 import ReviewForm from '@/components/ReviewForm';
-import { Star, Heart, Share2, ShoppingCart, Check, ArrowLeft } from 'lucide-react';
+import { Star, Heart, Share2, ShoppingCart, Check, ArrowLeft, Truck, RotateCcw, Wallet } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
@@ -509,28 +509,37 @@ export default function ProductDetail() {
             </div>
 
             {/* Additional Info */}
-            <div className="space-y-4 text-sm text-muted-foreground">
-              <div className="flex items-start gap-3">
-                <span className="text-2xl">🚚</span>
-                <div>
-                  <p className="font-semibold text-foreground">Pengiriman Cepat</p>
-                  <p>Gratis ongkir untuk pembelian di atas Rp 500.000</p>
+            <div className="space-y-3 text-sm text-muted-foreground">
+              {[
+                {
+                  icon: <Truck className="w-4 h-4" />,
+                  color: 'bg-blue-50 text-blue-600',
+                  title: 'Pengiriman Cepat',
+                  desc: 'Gratis ongkir untuk pembelian di atas Rp 500.000',
+                },
+                {
+                  icon: <RotateCcw className="w-4 h-4" />,
+                  color: 'bg-green-50 text-green-600',
+                  title: 'Garansi Puas',
+                  desc: 'Kembalikan hingga 14 hari tanpa pertanyaan',
+                },
+                {
+                  icon: <Wallet className="w-4 h-4" />,
+                  color: 'bg-amber-50 text-amber-600',
+                  title: 'Berbagai Metode Pembayaran',
+                  desc: 'Transfer bank, e-wallet, dan cicilan',
+                },
+              ].map((item, i) => (
+                <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-gray-50/80 border border-gray-100 hover:border-primary/20 transition-colors">
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${item.color}`}>
+                    {item.icon}
+                  </div>
+                  <div>
+                    <p className="font-semibold text-foreground text-xs leading-tight">{item.title}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5 leading-tight">{item.desc}</p>
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <span className="text-2xl">🔄</span>
-                <div>
-                  <p className="font-semibold text-foreground">Garansi Puas</p>
-                  <p>Kembalikan hingga 14 hari tanpa pertanyaan</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <span className="text-2xl">💳</span>
-                <div>
-                  <p className="font-semibold text-foreground">Berbagai Metode Pembayaran</p>
-                  <p>Transfer bank, e-wallet, dan cicilan</p>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
         </div>

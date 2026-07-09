@@ -73,8 +73,8 @@ export default function AdminLayout({ children, title, description }: AdminLayou
         {/* Logo */}
         <div className="border-b border-gray-800 p-5 flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-primary to-secondary rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-lg">
-              NK
+            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-lg p-1.5 flex-shrink-0">
+              <img src="/cendrawasih.png" alt="Logo" className="w-full h-full object-contain" />
             </div>
             <div>
               <h1 className="font-bold text-base leading-tight">Aparel Khas Papua</h1>

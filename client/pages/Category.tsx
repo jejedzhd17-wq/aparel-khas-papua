@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import { Star, ArrowLeft, Shirt } from 'lucide-react';
+import { motion } from 'framer-motion';
+
 
 // Custom SVG Icons dengan unsur etnik khas Papua untuk keempat kategori utama
 const KaosPapuaIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -222,6 +224,12 @@ export default function Category() {
 
   useEffect(() => {
     if (!categoryInfo || !categorySlug) return;
+    
+    // Set local fallback products immediately so the category screen renders instantly
+    const fallbackProducts = ALL_PRODUCTS.filter(p => p.slug === categorySlug);
+    setProducts(fallbackProducts);
+    setIsLoading(true);
+
     const fetchProducts = async () => {
       try {
         const dbCategoryName = SLUG_TO_DB_NAME[categorySlug] || '';
@@ -240,12 +248,12 @@ export default function Category() {
           
           setProducts(mapped);
         } else {
-          // If no dynamic data, fall back to static
-          setProducts(ALL_PRODUCTS.filter(p => p.slug === categorySlug));
+          // If no dynamic data, keep fallback
+          setProducts(fallbackProducts);
         }
       } catch (err) {
         console.error("Gagal memuat produk kategori dari DB:", err);
-        setProducts(ALL_PRODUCTS.filter(p => p.slug === categorySlug));
+        setProducts(fallbackProducts);
       } finally {
         setIsLoading(false);
       }
@@ -306,55 +314,77 @@ export default function Category() {
 
       {/* Products Section */}
       <div className="max-w-7xl mx-auto px-4 py-12 md:py-16">
-        {products.length > 0 ? (
+        {isLoading && products.length === 0 ? (
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 md:gap-8">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="animate-pulse bg-white border border-gray-100 rounded-xl h-96 flex flex-col p-4 space-y-4">
+                <div className="bg-gray-100 rounded-lg h-48 w-full" />
+                <div className="bg-gray-100 h-6 rounded w-3/4" />
+                <div className="bg-gray-100 h-4 rounded w-1/2" />
+                <div className="bg-gray-100 h-10 rounded w-full mt-auto" />
+              </div>
+            ))}
+          </div>
+        ) : products.length > 0 ? (
           <>
             <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 md:gap-8 mb-12">
-              {products.map((product) => (
-                <Link
+              {products.map((product, pIdx) => (
+                <motion.div
                   key={product.id}
-                  to={`/product/${product.id}`}
-                  className="group"
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: '-30px' }}
+                  transition={{ duration: 0.5, delay: (pIdx % 3) * 0.1, ease: 'easeOut' }}
                 >
-                  <div className="bg-white rounded-xl overflow-hidden border border-gray-100 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-                    {/* Product Image */}
-                    <div className="relative h-36 xs:h-40 sm:h-48 md:h-64 overflow-hidden bg-gray-100">
-                      <img
-                        src={getResolvedSrc(product.image)}
-                        alt={product.name}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                      />
-                      <div className="absolute top-3 right-3 bg-primary text-white px-3 py-1 rounded-full text-xs font-semibold">
-                        {product.category}
+                  <Link
+                    to={`/product/${product.id}`}
+                    className="group"
+                  >
+                    <div className="bg-white rounded-xl overflow-hidden border border-gray-100 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 h-full flex flex-col justify-between">
+                      <div>
+                        {/* Product Image */}
+                        <div className="relative h-36 xs:h-40 sm:h-48 md:h-64 overflow-hidden bg-gray-100">
+                          <img
+                            src={getResolvedSrc(product.image)}
+                            alt={product.name}
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                          />
+                          <div className="absolute top-3 right-3 bg-primary text-white px-3 py-1 rounded-full text-xs font-semibold">
+                            {product.category}
+                          </div>
+                        </div>
+
+                        {/* Product Info */}
+                        <div className="p-4">
+                          <h3 className="text-sm sm:text-base md:text-lg font-semibold text-foreground mb-1 sm:mb-2 group-hover:text-primary transition-colors line-clamp-2">
+                            {product.name}
+                          </h3>
+
+                          {/* Rating */}
+                          <div className="flex items-center gap-1 mb-3">
+                            {[...Array(product.rating)].map((_, i) => (
+                              <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                            ))}
+                          </div>
+
+                          {/* Price */}
+                          <div className="flex items-baseline justify-between mb-4">
+                            <span className="text-lg sm:text-xl md:text-2xl font-bold text-primary">
+                              Rp {Number(product.price).toLocaleString('id-ID')}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="p-4 pt-0">
+                        {/* View Button */}
+                        <button className="w-full bg-primary text-white font-semibold text-xs sm:text-sm py-2 rounded-lg hover:bg-primary/90 transition-colors duration-200">
+                          Lihat Detail
+                        </button>
                       </div>
                     </div>
-
-                    {/* Product Info */}
-                    <div className="p-4">
-                      <h3 className="text-sm sm:text-base md:text-lg font-semibold text-foreground mb-1 sm:mb-2 group-hover:text-primary transition-colors line-clamp-2">
-                        {product.name}
-                      </h3>
-
-                      {/* Rating */}
-                      <div className="flex items-center gap-1 mb-3">
-                        {[...Array(product.rating)].map((_, i) => (
-                          <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                        ))}
-                      </div>
-
-                      {/* Price */}
-                      <div className="flex items-baseline justify-between mb-4">
-                        <span className="text-lg sm:text-xl md:text-2xl font-bold text-primary">
-                          Rp {Number(product.price).toLocaleString('id-ID')}
-                        </span>
-                      </div>
-
-                      {/* View Button */}
-                      <button className="w-full bg-primary text-white font-semibold text-xs sm:text-sm py-2 rounded-lg hover:bg-primary/90 transition-colors duration-200">
-                        Lihat Detail
-                      </button>
-                    </div>
-                  </div>
-                </Link>
+                  </Link>
+                </motion.div>
               ))}
             </div>
 

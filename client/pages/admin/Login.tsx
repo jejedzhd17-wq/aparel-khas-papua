@@ -52,8 +52,8 @@ export default function AdminLogin() {
       <div className="max-w-md w-full">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center text-white text-2xl font-bold mx-auto mb-4">
-            NK
+          <div className="w-16 h-16 bg-white border border-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-md p-2">
+            <img src="/cendrawasih.png" alt="Logo" className="w-full h-full object-contain" />
           </div>
           <h1 className="text-3xl font-bold text-foreground font-playfair mb-2">
             Admin Panel
