@@ -151,6 +151,20 @@ CREATE TABLE IF NOT EXISTS reviews (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
+-- 12. Table: bank_accounts
+CREATE TABLE IF NOT EXISTS bank_accounts (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    type ENUM('bank','ewallet') NOT NULL DEFAULT 'bank',
+    name VARCHAR(50) NOT NULL,
+    account_number VARCHAR(50) NOT NULL,
+    account_holder VARCHAR(100) NOT NULL DEFAULT 'Aparel Papua Store',
+    color VARCHAR(20) DEFAULT '#005CA5',
+    is_active TINYINT(1) NOT NULL DEFAULT 1,
+    sort_order INT NOT NULL DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- ───────────────────────────────────────────────────────────
 -- SEED DATA AWAL (MOCK DATA)
 -- ───────────────────────────────────────────────────────────
