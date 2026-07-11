@@ -1,254 +1,146 @@
 import pool from '../config/db.js';
 
-// ─── Helper: Generate timeline pengiriman dinamis ───────────────────
+// ─── Helper: generate timeline pengiriman ───────────────────────────
 const generateTimeline = (shipment) => {
-  const { kurir, resi, status_pengiriman, tanggal_kirim } = shipment;
-
-  const dateFormatted = tanggal_kirim
-    ? new Date(tanggal_kirim).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
+  const { courier, tracking_number, status, shipping_date } = shipment;
+  const dateFormatted = shipping_date
+    ? new Date(shipping_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
     : '-';
 
-  const isDikirim  = ['dikirim', 'shipped', 'in_transit', 'delivered', 'selesai'].includes(status_pengiriman);
-  const isInTransit = ['in_transit', 'delivered', 'selesai'].includes(status_pengiriman);
-  const isDelivered = ['delivered', 'selesai'].includes(status_pengiriman);
+  const isShipped    = ['shipped', 'in_transit', 'delivered'].includes(status);
+  const isInTransit  = ['in_transit', 'delivered'].includes(status);
+  const isDelivered  = status === 'delivered';
 
   return [
-    {
-      id: 1,
-      label: 'Pesanan Diproses',
-      date: dateFormatted,
-      time: '-',
-      completed: true,
-      description: 'Penjual sedang menyiapkan paket Anda',
-    },
-    {
-      id: 2,
-      label: 'Paket Dikirim',
-      date: isDikirim ? dateFormatted : '-',
-      time: '-',
-      completed: isDikirim,
-      description: isDikirim
-        ? `Paket diserahkan ke kurir ${kurir || '-'} dengan resi ${resi || '-'}`
-        : 'Menunggu kurir menjemput barang',
-    },
-    {
-      id: 3,
-      label: 'Dalam Perjalanan',
-      date: isInTransit ? dateFormatted : '-',
-      time: '-',
-      completed: isInTransit,
-      description: isInTransit
-        ? 'Paket sedang menuju ke alamat tujuan'
-        : 'Paket belum masuk ke hub logistik terdekat',
-    },
-    {
-      id: 4,
-      label: 'Diterima',
-      date: isDelivered ? dateFormatted : '-',
-      time: '-',
-      completed: isDelivered,
-      description: isDelivered
-        ? 'Paket telah berhasil diterima'
-        : 'Menunggu hingga paket sampai ke tujuan',
-    },
+    { id: 1, label: 'Pesanan Diproses',   date: dateFormatted, completed: true,        description: 'Penjual sedang menyiapkan paket Anda' },
+    { id: 2, label: 'Paket Dikirim',      date: isShipped   ? dateFormatted : '-', completed: isShipped,
+      description: isShipped ? `Paket diserahkan ke kurir ${courier || '-'} dengan resi ${tracking_number || '-'}` : 'Menunggu kurir menjemput barang' },
+    { id: 3, label: 'Dalam Perjalanan',   date: isInTransit ? dateFormatted : '-', completed: isInTransit,
+      description: isInTransit ? 'Paket sedang menuju ke alamat tujuan' : 'Paket belum masuk ke hub logistik terdekat' },
+    { id: 4, label: 'Diterima',           date: isDelivered ? dateFormatted : '-', completed: isDelivered,
+      description: isDelivered ? 'Paket telah berhasil diterima' : 'Menunggu hingga paket sampai ke tujuan' },
   ];
 };
 
-// ─── Helper: Parse kolom alamat_pengiriman ────────────────────────────
-// Format di DB: "Nama\nInfo baris 2\nInfo baris 3\n..."
-const parseAddress = (alamat) => {
-  const lines = (alamat || '').split('\n').map((l) => l.trim()).filter(Boolean);
-  const name = lines[0] || 'Pelanggan';
-  const address = lines.length > 1 ? lines.slice(1).join(', ') : alamat || '-';
-  return { name, address };
-};
+// Helper: format shipment object
+const formatShipment = (s, items = []) => ({
+  id: s.id,
+  orderId:        s.order_id,
+  trackingNumber: s.tracking_number,
+  courier:        s.courier,
+  status:         s.status || 'pending',
+  shippingDate:   s.shipping_date,
+  estimatedDelivery: s.estimated_delivery || null,
+  address:        s.address   ? `${s.address}, ${s.city || ''}, ${s.province || ''}` : '-',
+  customerName:   s.full_name || 'Pelanggan',
+  total:          s.total ? parseFloat(s.total) : null,
+  items,
+  timeline: generateTimeline(s),
+});
 
-// ─── GET /api/shipments (Daftar shipment untuk user yang login) ─────
+// ─── GET /api/shipments (Shipment milik user) ─────────────────────
 export const getUserShipments = async (req, res) => {
   try {
     const userId = req.user.id;
 
     const [shipments] = await pool.query(
-      `SELECT s.id, s.order_id, s.kurir, s.resi, s.status_pengiriman, s.tanggal_kirim,
-              o.alamat_pengiriman, o.total_harga
+      `SELECT s.id, s.order_id, s.courier, s.tracking_number, s.status, s.shipping_date, s.estimated_delivery,
+              o.full_name, o.address, o.city, o.province, o.total
        FROM shipments s
        INNER JOIN orders o ON s.order_id = o.id
        WHERE o.user_id = ?
-       ORDER BY s.tanggal_kirim DESC`,
+       ORDER BY s.shipping_date DESC`,
       [userId]
     );
-
-    const formatted = shipments.map((s) => {
-      const { name, address } = parseAddress(s.alamat_pengiriman);
-      return {
-        id: s.id,
-        orderId: s.order_id,
-        trackingNumber: s.resi,
-        courier: s.kurir,
-        status: s.status_pengiriman || 'dikirim',
-        shippingDate: s.tanggal_kirim,
-        address,
-        customerName: name,
-        total: s.total_harga,
-        timeline: generateTimeline(s),
-      };
-    });
 
     return res.status(200).json({
       success: true,
       message: 'Daftar pengiriman berhasil diambil',
-      data: formatted,
+      data: shipments.map(s => formatShipment(s)),
     });
   } catch (error) {
     console.error('GetUserShipments error:', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Terjadi kesalahan server',
-      error: error.message,
-    });
+    return res.status(500).json({ success: false, message: 'Terjadi kesalahan server', error: error.message });
   }
 };
 
-// ─── GET /api/shipments/:id (Detail shipment by ID) ───────────────
+// ─── GET /api/shipments/:id ───────────────────────────────────────
 export const getShipmentById = async (req, res) => {
   try {
     const { id } = req.params;
 
     const [shipments] = await pool.query(
-      `SELECT s.id, s.order_id, s.kurir, s.resi, s.status_pengiriman, s.tanggal_kirim,
-              o.alamat_pengiriman, o.total_harga, o.user_id
+      `SELECT s.id, s.order_id, s.courier, s.tracking_number, s.status, s.shipping_date, s.estimated_delivery,
+              o.full_name, o.address, o.city, o.province, o.total, o.user_id
        FROM shipments s
        INNER JOIN orders o ON s.order_id = o.id
        WHERE s.id = ?`,
       [id]
     );
 
-    if (shipments.length === 0) {
-      return res.status(404).json({ success: false, message: 'Pengiriman tidak ditemukan' });
-    }
+    if (shipments.length === 0) return res.status(404).json({ success: false, message: 'Pengiriman tidak ditemukan' });
 
     const s = shipments[0];
-
-    // Cek otorisasi: hanya admin atau pemilik order
     if (req.user.role !== 'admin' && s.user_id !== req.user.id) {
       return res.status(403).json({ success: false, message: 'Anda tidak memiliki akses ke pengiriman ini' });
     }
 
-    // Ambil item-item dalam order
     const [items] = await pool.query(
-      `SELECT oi.jumlah AS quantity, p.nama_produk AS name
-       FROM order_items oi
-       LEFT JOIN products p ON oi.product_id = p.id
-       WHERE oi.order_id = ?`,
+      `SELECT oi.quantity, p.name FROM order_items oi LEFT JOIN products p ON oi.product_id = p.id WHERE oi.order_id = ?`,
       [s.order_id]
     );
 
-    const { name, address } = parseAddress(s.alamat_pengiriman);
-
-    return res.status(200).json({
-      success: true,
-      message: 'Detail pengiriman berhasil diambil',
-      data: {
-        id: s.id,
-        orderId: s.order_id,
-        trackingNumber: s.resi,
-        courier: s.kurir,
-        status: s.status_pengiriman || 'dikirim',
-        shippingDate: s.tanggal_kirim,
-        address,
-        customerName: name,
-        items,
-        timeline: generateTimeline(s),
-      },
-    });
+    return res.status(200).json({ success: true, message: 'Detail pengiriman berhasil diambil', data: formatShipment(s, items) });
   } catch (error) {
     console.error('GetShipmentById error:', error);
     return res.status(500).json({ success: false, message: 'Terjadi kesalahan server', error: error.message });
   }
 };
 
-// ─── GET /api/shipments/track/:trackingNumber (Public – lacak via resi) ──
+// ─── GET /api/shipments/track/:trackingNumber (Public) ────────────
 export const trackShipmentByResi = async (req, res) => {
   try {
     const { trackingNumber } = req.params;
 
     const [shipments] = await pool.query(
-      `SELECT s.id, s.order_id, s.kurir, s.resi, s.status_pengiriman, s.tanggal_kirim,
-              o.alamat_pengiriman, o.total_harga
+      `SELECT s.id, s.order_id, s.courier, s.tracking_number, s.status, s.shipping_date, s.estimated_delivery,
+              o.full_name, o.address, o.city, o.province, o.total
        FROM shipments s
        INNER JOIN orders o ON s.order_id = o.id
-       WHERE s.resi = ?`,
+       WHERE s.tracking_number = ?`,
       [trackingNumber]
     );
 
-    if (shipments.length === 0) {
-      return res.status(404).json({ success: false, message: 'Nomor resi tidak terdaftar' });
-    }
+    if (shipments.length === 0) return res.status(404).json({ success: false, message: 'Nomor resi tidak terdaftar' });
 
     const s = shipments[0];
-
-    // Ambil item-item dalam order
     const [items] = await pool.query(
-      `SELECT oi.jumlah AS quantity, p.nama_produk AS name
-       FROM order_items oi
-       LEFT JOIN products p ON oi.product_id = p.id
-       WHERE oi.order_id = ?`,
+      `SELECT oi.quantity, p.name FROM order_items oi LEFT JOIN products p ON oi.product_id = p.id WHERE oi.order_id = ?`,
       [s.order_id]
     );
 
-    const { name, address } = parseAddress(s.alamat_pengiriman);
-
-    return res.status(200).json({
-      success: true,
-      message: 'Pelacakan resi berhasil',
-      data: {
-        id: s.id,
-        orderId: s.order_id,
-        trackingNumber: s.resi,
-        courier: s.kurir,
-        status: s.status_pengiriman || 'dikirim',
-        shippingDate: s.tanggal_kirim,
-        address,
-        customerName: name,
-        items,
-        timeline: generateTimeline(s),
-      },
-    });
+    return res.status(200).json({ success: true, message: 'Pelacakan resi berhasil', data: formatShipment(s, items) });
   } catch (error) {
     console.error('TrackShipmentByResi error:', error);
     return res.status(500).json({ success: false, message: 'Terjadi kesalahan server', error: error.message });
   }
 };
 
-// ─── GET /api/shipments/admin (Semua pengiriman – admin only) ────────
+// ─── GET /api/shipments/admin (Admin) ────────────────────────────
 export const getAllShipmentsAdmin = async (req, res) => {
   try {
     const [shipments] = await pool.query(
-      `SELECT s.id, s.order_id, s.kurir, s.resi, s.status_pengiriman, s.tanggal_kirim,
-              o.alamat_pengiriman
+      `SELECT s.id, s.order_id, s.courier, s.tracking_number, s.status, s.shipping_date,
+              o.full_name, o.address, o.city, o.province
        FROM shipments s
        INNER JOIN orders o ON s.order_id = o.id
-       ORDER BY s.tanggal_kirim DESC`
+       ORDER BY s.shipping_date DESC`
     );
-
-    const formatted = shipments.map((s) => {
-      const { name, address } = parseAddress(s.alamat_pengiriman);
-      return {
-        id: s.id,
-        orderId: s.order_id,
-        courier: s.kurir,
-        trackingNumber: s.resi,
-        status: s.status_pengiriman || 'dikirim',
-        customerName: name,
-        address,
-        date: s.tanggal_kirim,
-      };
-    });
 
     return res.status(200).json({
       success: true,
       message: 'Daftar semua pengiriman berhasil diambil',
-      data: formatted,
+      data: shipments.map(s => formatShipment(s)),
     });
   } catch (error) {
     console.error('GetAllShipmentsAdmin error:', error);
@@ -256,7 +148,7 @@ export const getAllShipmentsAdmin = async (req, res) => {
   }
 };
 
-// ─── POST /api/shipments (Buat shipment baru – admin) ─────────────────
+// ─── POST /api/shipments (Admin – buat shipment baru) ──────────────
 export const createShipment = async (req, res) => {
   const connection = await pool.getConnection();
   try {
@@ -266,51 +158,39 @@ export const createShipment = async (req, res) => {
 
     if (!orderId || !courier || !trackingNumber) {
       connection.release();
-      return res.status(400).json({
-        success: false,
-        message: 'Order ID, kurir, dan nomor resi harus diisi',
-      });
+      return res.status(400).json({ success: false, message: 'Order ID, kurir, dan nomor resi harus diisi' });
     }
 
-    // Pastikan order ada
     const [orders] = await pool.query('SELECT id FROM orders WHERE id = ?', [orderId]);
     if (orders.length === 0) {
       connection.release();
       return res.status(404).json({ success: false, message: 'Order tidak ditemukan' });
     }
 
-    // Cek apakah sudah ada shipment untuk order ini
     const [existing] = await pool.query('SELECT id FROM shipments WHERE order_id = ?', [orderId]);
 
     let insertId;
     if (existing.length > 0) {
-      // Update saja jika sudah ada
       await connection.query(
-        `UPDATE shipments
-         SET kurir = ?, resi = ?, status_pengiriman = 'dikirim', tanggal_kirim = CURDATE()
-         WHERE order_id = ?`,
+        "UPDATE shipments SET courier = ?, tracking_number = ?, status = 'shipped', shipping_date = NOW() WHERE order_id = ?",
         [courier, trackingNumber, orderId]
       );
       insertId = existing[0].id;
     } else {
-      // Insert baru
       const [result] = await connection.query(
-        `INSERT INTO shipments (order_id, kurir, resi, status_pengiriman, tanggal_kirim)
-         VALUES (?, ?, ?, 'dikirim', CURDATE())`,
+        "INSERT INTO shipments (order_id, courier, tracking_number, status, shipping_date) VALUES (?, ?, ?, 'shipped', NOW())",
         [orderId, courier, trackingNumber]
       );
       insertId = result.insertId;
     }
 
-    // Update status order menjadi 'dikirim'
-    await connection.query("UPDATE orders SET status = 'dikirim' WHERE id = ?", [orderId]);
-
+    await connection.query("UPDATE orders SET status = 'shipped' WHERE id = ?", [orderId]);
     await connection.commit();
 
     return res.status(201).json({
       success: true,
       message: 'Pengiriman berhasil didaftarkan',
-      data: { id: insertId, orderId, courier, trackingNumber, status: 'dikirim' },
+      data: { id: insertId, orderId, courier, trackingNumber, status: 'shipped' },
     });
   } catch (error) {
     await connection.rollback();
@@ -321,13 +201,13 @@ export const createShipment = async (req, res) => {
   }
 };
 
-// ─── PUT /api/shipments/:id (Update shipment – admin) ─────────────────
+// ─── PUT /api/shipments/:id (Admin – update) ──────────────────────
 export const updateShipment = async (req, res) => {
   const connection = await pool.getConnection();
   try {
     await connection.beginTransaction();
 
-    const { id } = req.params;
+    const { id }  = req.params;
     const { courier, trackingNumber, status } = req.body;
 
     const [shipments] = await pool.query('SELECT order_id FROM shipments WHERE id = ?', [id]);
@@ -340,27 +220,22 @@ export const updateShipment = async (req, res) => {
 
     await connection.query(
       `UPDATE shipments
-       SET kurir = COALESCE(?, kurir),
-           resi  = COALESCE(?, resi),
-           status_pengiriman = COALESCE(?, status_pengiriman)
+       SET courier = COALESCE(?, courier),
+           tracking_number = COALESCE(?, tracking_number),
+           status = COALESCE(?, status)
        WHERE id = ?`,
       [courier || null, trackingNumber || null, status || null, id]
     );
 
-    // Sinkronkan status pesanan
-    if (status === 'delivered' || status === 'selesai') {
-      await connection.query("UPDATE orders SET status = 'selesai' WHERE id = ?", [order_id]);
-    } else if (['dikirim', 'shipped', 'in_transit'].includes(status)) {
-      await connection.query("UPDATE orders SET status = 'dikirim' WHERE id = ?", [order_id]);
+    // Sinkronkan status order
+    if (status === 'delivered') {
+      await connection.query("UPDATE orders SET status = 'completed' WHERE id = ?", [order_id]);
+    } else if (['shipped', 'in_transit'].includes(status)) {
+      await connection.query("UPDATE orders SET status = 'shipped' WHERE id = ?", [order_id]);
     }
 
     await connection.commit();
-
-    return res.status(200).json({
-      success: true,
-      message: 'Data pengiriman berhasil diperbarui',
-      data: { id, courier, trackingNumber, status },
-    });
+    return res.status(200).json({ success: true, message: 'Data pengiriman berhasil diperbarui', data: { id, courier, trackingNumber, status } });
   } catch (error) {
     await connection.rollback();
     console.error('UpdateShipment error:', error);
@@ -370,14 +245,12 @@ export const updateShipment = async (req, res) => {
   }
 };
 
-// ─── DELETE /api/shipments/:id (Hapus shipment – admin) ───────────────
+// ─── DELETE /api/shipments/:id (Admin) ────────────────────────────
 export const deleteShipment = async (req, res) => {
   try {
     const { id } = req.params;
     const [result] = await pool.query('DELETE FROM shipments WHERE id = ?', [id]);
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ success: false, message: 'Pengiriman tidak ditemukan' });
-    }
+    if (result.affectedRows === 0) return res.status(404).json({ success: false, message: 'Pengiriman tidak ditemukan' });
     return res.status(200).json({ success: true, message: 'Pengiriman berhasil dihapus' });
   } catch (error) {
     console.error('DeleteShipment error:', error);

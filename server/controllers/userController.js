@@ -5,7 +5,7 @@ import bcrypt from 'bcrypt';
 export const getAllUsers = async (req, res) => {
   try {
     const [users] = await pool.query(
-      'SELECT id, nama as name, email, role, alamat as address, no_hp as phone, created_at as joinDate FROM users ORDER BY created_at DESC'
+      'SELECT id, name, email, role, address, phone, created_at as joinDate FROM users ORDER BY created_at DESC'
     );
 
     return res.status(200).json({
@@ -29,7 +29,7 @@ export const getUserById = async (req, res) => {
     const { id } = req.params;
 
     const [users] = await pool.query(
-      'SELECT id, nama as name, email, role, alamat as address, no_hp as phone, created_at as joinDate FROM users WHERE id = ?',
+      'SELECT id, name, email, role, address, phone, created_at as joinDate FROM users WHERE id = ?',
       [id]
     );
 
@@ -74,7 +74,6 @@ export const createUser = async (req, res) => {
       });
     }
 
-    // Cek email duplikat
     const [existing] = await pool.query('SELECT id FROM users WHERE email = ?', [email.toLowerCase()]);
     if (existing.length > 0) {
       return res.status(409).json({
@@ -83,21 +82,23 @@ export const createUser = async (req, res) => {
       });
     }
 
+    const hashedPassword = await bcrypt.hash(password, 10);
+
     const [result] = await pool.query(
-      'INSERT INTO users (nama, email, password, role, alamat, no_hp) VALUES (?, ?, ?, ?, ?, ?)',
-      [name, email.toLowerCase(), password, role, address || null, phone || null]
+      'INSERT INTO users (name, email, password, role, address, phone) VALUES (?, ?, ?, ?, ?, ?)',
+      [name, email.toLowerCase(), hashedPassword, role, address || null, phone || null]
     );
 
     return res.status(201).json({
       success: true,
       message: 'User berhasil dibuat',
-      data: { 
-        id: result.insertId, 
-        name, 
-        email: email.toLowerCase(), 
+      data: {
+        id: result.insertId,
+        name,
+        email: email.toLowerCase(),
         role,
         address: address || null,
-        phone: phone || null
+        phone: phone || null,
       },
     });
   } catch (error) {
@@ -127,11 +128,11 @@ export const updateUser = async (req, res) => {
     const updateFields = [];
     const updateValues = [];
 
-    if (name) { updateFields.push('nama = ?'); updateValues.push(name); }
-    if (email) { updateFields.push('email = ?'); updateValues.push(email.toLowerCase()); }
+    if (name)  { updateFields.push('name = ?');    updateValues.push(name); }
+    if (email) { updateFields.push('email = ?');   updateValues.push(email.toLowerCase()); }
     if (role && ['user', 'admin'].includes(role)) { updateFields.push('role = ?'); updateValues.push(role); }
-    if (address !== undefined) { updateFields.push('alamat = ?'); updateValues.push(address); }
-    if (phone !== undefined) { updateFields.push('no_hp = ?'); updateValues.push(phone); }
+    if (address !== undefined) { updateFields.push('address = ?'); updateValues.push(address); }
+    if (phone  !== undefined)  { updateFields.push('phone = ?');   updateValues.push(phone); }
 
     if (updateFields.length === 0) {
       return res.status(400).json({
@@ -144,7 +145,7 @@ export const updateUser = async (req, res) => {
     await pool.query(`UPDATE users SET ${updateFields.join(', ')} WHERE id = ?`, updateValues);
 
     const [updatedUser] = await pool.query(
-      'SELECT id, nama as name, email, role, alamat as address, no_hp as phone, created_at as joinDate FROM users WHERE id = ?',
+      'SELECT id, name, email, role, address, phone, created_at as joinDate FROM users WHERE id = ?',
       [id]
     );
 
@@ -168,7 +169,6 @@ export const deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Cegah admin menghapus diri sendiri
     if (parseInt(id) === req.user.id) {
       return res.status(400).json({
         success: false,

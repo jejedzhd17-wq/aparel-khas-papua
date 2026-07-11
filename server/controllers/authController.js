@@ -14,7 +14,6 @@ export const register = async (req, res) => {
   try {
     const { name, email, password, phone, address } = req.body;
 
-    // Validasi input
     if (!name || !email || !password) {
       return res.status(400).json({
         success: false,
@@ -36,7 +35,6 @@ export const register = async (req, res) => {
       });
     }
 
-    // Cek apakah email sudah terdaftar
     const [existing] = await pool.query('SELECT id FROM users WHERE email = ?', [email.toLowerCase()]);
     if (existing.length > 0) {
       return res.status(409).json({
@@ -45,18 +43,14 @@ export const register = async (req, res) => {
       });
     }
 
-    // Hash password dengan bcrypt
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Simpan user ke database
     const [result] = await pool.query(
-      'INSERT INTO users (nama, email, password, role, alamat, no_hp) VALUES (?, ?, ?, ?, ?, ?)',
+      'INSERT INTO users (name, email, password, role, address, phone) VALUES (?, ?, ?, ?, ?, ?)',
       [name, email.toLowerCase(), hashedPassword, 'user', address || null, phone || null]
     );
 
     const userId = result.insertId;
-
-    // Generate token
     const token = generateToken({ id: userId, email: email.toLowerCase(), role: 'user' });
 
     return res.status(201).json({
@@ -64,13 +58,13 @@ export const register = async (req, res) => {
       message: 'Akun berhasil dibuat',
       data: {
         token,
-        user: { 
-          id: userId, 
-          name, 
-          email: email.toLowerCase(), 
+        user: {
+          id: userId,
+          name,
+          email: email.toLowerCase(),
           role: 'user',
           address: address || null,
-          phone: phone || null
+          phone: phone || null,
         },
       },
     });
@@ -96,55 +90,29 @@ export const login = async (req, res) => {
       });
     }
 
-    // 1. Cari user di tabel users terlebih dahulu
+    // Cari user di tabel users (termasuk admin berdasarkan role)
     const [users] = await pool.query(
-      'SELECT id, nama as name, email, password, role, alamat, no_hp FROM users WHERE email = ?',
+      'SELECT id, name, email, password, role, address, phone FROM users WHERE email = ?',
       [email.toLowerCase()]
     );
 
-    let user;
-    if (users.length > 0) {
-      user = users[0];
-    } else {
-      // 2. Jika tidak ada di tabel users, cari di tabel admins
-      const [admins] = await pool.query(
-        'SELECT id, nama as name, email, password FROM admins WHERE email = ?',
-        [email.toLowerCase()]
-      );
-
-      if (admins.length > 0) {
-        user = {
-          id: admins[0].id,
-          name: admins[0].name,
-          email: admins[0].email,
-          password: admins[0].password,
-          role: 'admin',
-          alamat: null,
-          no_hp: null,
-        };
-      }
-    }
-
-    // Jika tidak ditemukan di kedua tabel
-    if (!user) {
+    if (users.length === 0) {
       return res.status(401).json({
         success: false,
         message: 'Email tidak terdaftar. Silakan daftar terlebih dahulu.',
       });
     }
 
-    // Verifikasi password — kedua tabel pakai bcrypt
-    let isPasswordValid;
-    if (user.role === 'admin') {
+    const user = users[0];
+
+    // Verifikasi password
+    let isPasswordValid = false;
+    try {
       isPasswordValid = await bcrypt.compare(password, user.password);
-    } else {
-      // Coba bcrypt dulu (user baru), fallback plain text (user lama sebelum fix)
-      try {
-        isPasswordValid = await bcrypt.compare(password, user.password);
-      } catch {
-        isPasswordValid = (password === user.password);
-      }
+    } catch {
+      isPasswordValid = (password === user.password);
     }
+
     if (!isPasswordValid) {
       return res.status(401).json({
         success: false,
@@ -152,7 +120,6 @@ export const login = async (req, res) => {
       });
     }
 
-    // Generate token
     const token = generateToken({ id: user.id, email: user.email, role: user.role });
 
     return res.status(200).json({
@@ -160,13 +127,13 @@ export const login = async (req, res) => {
       message: 'Login berhasil',
       data: {
         token,
-        user: { 
-          id: user.id, 
-          name: user.name, 
-          email: user.email, 
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
           role: user.role,
-          address: user.alamat,
-          phone: user.no_hp
+          address: user.address,
+          phone: user.phone,
         },
       },
     });
@@ -192,9 +159,9 @@ export const adminLogin = async (req, res) => {
       });
     }
 
-    // Cari admin berdasarkan email dari tabel admins
+    // Cari admin dari tabel users berdasarkan role='admin'
     const [admins] = await pool.query(
-      'SELECT id, nama as name, email, password FROM admins WHERE email = ?',
+      "SELECT id, name, email, password FROM users WHERE email = ? AND role = 'admin'",
       [email.toLowerCase()]
     );
 
@@ -207,7 +174,6 @@ export const adminLogin = async (req, res) => {
 
     const admin = admins[0];
 
-    // Verifikasi password
     const isPasswordValid = await bcrypt.compare(password, admin.password);
     if (!isPasswordValid) {
       return res.status(401).json({
@@ -216,7 +182,6 @@ export const adminLogin = async (req, res) => {
       });
     }
 
-    // Generate token dengan role 'admin'
     const token = generateToken({ id: admin.id, email: admin.email, role: 'admin' });
 
     return res.status(200).json({
@@ -241,7 +206,7 @@ export const adminLogin = async (req, res) => {
 export const getMe = async (req, res) => {
   try {
     const [users] = await pool.query(
-      'SELECT id, nama as name, email, role, alamat, no_hp, created_at FROM users WHERE id = ?',
+      'SELECT id, name, email, role, address, phone, created_at FROM users WHERE id = ?',
       [req.user.id]
     );
 
@@ -262,9 +227,9 @@ export const getMe = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
-        address: user.alamat,
-        phone: user.no_hp,
-        createdAt: user.created_at
+        address: user.address,
+        phone: user.phone,
+        createdAt: user.created_at,
       },
     });
   } catch (error) {
@@ -279,7 +244,6 @@ export const getMe = async (req, res) => {
 
 // ─── POST /api/auth/logout ────────────────────────────────────────
 export const logout = async (req, res) => {
-  // JWT stateless — logout di sisi client dengan menghapus token
   return res.status(200).json({
     success: true,
     message: 'Logout berhasil. Silakan hapus token di sisi client.',
