@@ -4,6 +4,7 @@ import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import { Star, ArrowRight, Palette, Leaf, Handshake } from 'lucide-react';
 import SplitText from '@/components/ui/SplitText';
+import { motion } from 'framer-motion';
 
 const getResolvedSrc = (raw?: string) => {
   if (!raw) return '/placeholder.svg';
@@ -200,85 +201,104 @@ export default function Index() {
       {/* Featured Products Section */}
       <section className="py-16 md:py-24 px-4">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
+          <motion.div
+            initial={{ opacity: 0, y: 35 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.7, ease: "easeOut" }}
+            className="text-center mb-16"
+          >
             <h2 className="text-foreground mb-4">
               Produk Unggulan
             </h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
               Pilihan terbaik kami yang menggabungkan kualitas premium dengan desain yang terinspirasi budaya Papua
             </p>
-          </div>
+          </motion.div>
 
           {/* Infinite scroll ticker — auto-scrolls, user can swipe */}
-          <style>{`.ticker-container::-webkit-scrollbar { display: none; }`}</style>
-          <div
-            ref={scrollRef}
-            className="ticker-container overflow-x-scroll py-4 cursor-grab active:cursor-grabbing"
-            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
           >
-            <div className="flex gap-5 w-max">
-              {displayItems.map((product, idx) => (
-                <div
-                  key={`${product.id}-${idx}`}
-                  className="flex-shrink-0 w-56 sm:w-64 md:w-72"
-                >
-                  <Link
-                    to={`/product/${product.id}`}
-                    className="group block h-full"
-                    draggable={false}
+            <style>{`.ticker-container::-webkit-scrollbar { display: none; }`}</style>
+            <div
+              ref={scrollRef}
+              className="ticker-container overflow-x-scroll py-4 cursor-grab active:cursor-grabbing"
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
+              <div className="flex gap-5 w-max">
+                {displayItems.map((product, idx) => (
+                  <div
+                    key={`${product.id}-${idx}`}
+                    className="flex-shrink-0 w-56 sm:w-64 md:w-72"
                   >
-                    <div className="bg-white rounded-xl overflow-hidden border border-gray-100 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 h-full flex flex-col select-none">
-                      {/* Product Image */}
-                      <div className="relative h-48 sm:h-56 md:h-64 overflow-hidden bg-gray-100">
-                        <img
-                          src={getResolvedSrc(product.image)}
-                          alt={product.name}
-                          draggable={false}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 pointer-events-none"
-                        />
-                        <div className="absolute top-3 right-3 bg-primary text-white px-3 py-1 rounded-full text-xs font-semibold">
-                          {product.category}
+                    <Link
+                      to={`/product/${product.id}`}
+                      className="group block h-full"
+                      draggable={false}
+                    >
+                      <div className="bg-white rounded-xl overflow-hidden border border-gray-100 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 h-full flex flex-col select-none">
+                        {/* Product Image */}
+                        <div className="relative h-48 sm:h-56 md:h-64 overflow-hidden bg-gray-100">
+                          <img
+                            src={getResolvedSrc(product.image)}
+                            alt={product.name}
+                            draggable={false}
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 pointer-events-none"
+                          />
+                          <div className="absolute top-3 right-3 bg-primary text-white px-3 py-1 rounded-full text-xs font-semibold">
+                            {product.category}
+                          </div>
+                        </div>
+
+                        {/* Product Info */}
+                        <div className="p-4 flex flex-col flex-grow">
+                          <h3 className="text-sm sm:text-base font-semibold text-foreground mb-2 group-hover:text-primary transition-colors line-clamp-2 min-h-[2.5rem]">
+                            {product.name}
+                          </h3>
+
+                          {/* Rating */}
+                          <div className="flex items-center gap-1 mb-3">
+                            {[...Array(product.rating)].map((_, i) => (
+                              <Star key={i} className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
+                            ))}
+                          </div>
+
+                          {/* Price */}
+                          <div className="mt-auto">
+                            <span className="text-lg font-bold text-primary block mb-3">
+                              Rp {Number(product.price).toLocaleString('id-ID')}
+                            </span>
+                            <button className="w-full bg-primary text-white font-semibold text-xs py-2 rounded-lg hover:bg-primary/90 transition-colors duration-200">
+                              Lihat Detail
+                            </button>
+                          </div>
                         </div>
                       </div>
-
-                      {/* Product Info */}
-                      <div className="p-4 flex flex-col flex-grow">
-                        <h3 className="text-sm sm:text-base font-semibold text-foreground mb-2 group-hover:text-primary transition-colors line-clamp-2 min-h-[2.5rem]">
-                          {product.name}
-                        </h3>
-
-                        {/* Rating */}
-                        <div className="flex items-center gap-1 mb-3">
-                          {[...Array(product.rating)].map((_, i) => (
-                            <Star key={i} className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
-                          ))}
-                        </div>
-
-                        {/* Price */}
-                        <div className="mt-auto">
-                          <span className="text-lg font-bold text-primary block mb-3">
-                            Rp {Number(product.price).toLocaleString('id-ID')}
-                          </span>
-                          <button className="w-full bg-primary text-white font-semibold text-xs py-2 rounded-lg hover:bg-primary/90 transition-colors duration-200">
-                            Lihat Detail
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </Link>
-                </div>
-              ))}
+                    </Link>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
+          </motion.div>
 
-          <div className="text-center mt-12">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+            className="text-center mt-12"
+          >
             <Link
               to="/shop"
               className="inline-flex items-center gap-2 text-primary font-semibold hover:gap-4 transition-all"
             >
               Lihat Semua Produk <ArrowRight className="w-5 h-5" />
             </Link>
-          </div>
+          </motion.div>
         </div>
       </section>
 
@@ -305,7 +325,13 @@ export default function Index() {
           style={{ background: 'linear-gradient(to top, #faf8f5 0%, transparent 100%)' }}
         />
 
-        <div className="relative z-10 max-w-3xl mx-auto text-center">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95, y: 30 }}
+          whileInView={{ opacity: 1, scale: 1, y: 0 }}
+          viewport={{ once: true, margin: "-80px" }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className="relative z-10 max-w-3xl mx-auto text-center"
+        >
           <span className="inline-block text-xs font-bold uppercase tracking-[0.3em] text-amber-300/90 mb-4">
             ✦ Warisan Budaya Papua ✦
           </span>
@@ -322,7 +348,7 @@ export default function Index() {
           >
             Temukan Koleksi Kami <ArrowRight className="w-4 h-4" />
           </Link>
-        </div>
+        </motion.div>
       </section>
 
       {/* About Papua Section */}
@@ -343,8 +369,12 @@ export default function Index() {
                 label: '📍 Jayapura, Papua',
               },
             ].map((photo, idx) => (
-              <div
+              <motion.div
                 key={idx}
+                initial={{ opacity: 0, y: 40, scale: 0.97 }}
+                whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                viewport={{ once: true, margin: "-60px" }}
+                transition={{ duration: 0.7, delay: idx * 0.15, ease: "easeOut" }}
                 className="relative group h-72 rounded-2xl overflow-hidden shadow-lg border border-[#e8d5c4]/40 cursor-pointer"
               >
                 <img
@@ -359,13 +389,18 @@ export default function Index() {
                     {photo.label}
                   </span>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
 
           {/* Text Content - below photos */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
-            <div>
+            <motion.div
+              initial={{ opacity: 0, x: -40 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, margin: "-60px" }}
+              transition={{ duration: 0.7, ease: "easeOut" }}
+            >
               <span className="text-xs font-bold uppercase tracking-widest text-primary mb-2 block">Filosofi Brand</span>
               <h2 className="text-3xl md:text-4xl font-extrabold text-foreground mb-6 font-playfair tracking-tight leading-tight">
                 Lebih Dari Sekadar <span className="text-primary italic font-serif">Sandang</span>
@@ -376,7 +411,7 @@ export default function Index() {
               <p className="text-muted-foreground text-base leading-relaxed">
                 Setiap helai kain dan goresan sablon di Aparel Khas Papua didesain dengan penuh rasa hormat terhadap warisan leluhur. Kami berkolaborasi langsung dengan seniman lokal untuk membawa keelokan burung Cenderawasih dan eksotisme pulau Raja Ampat ke dalam koleksi streetwear urban yang ikonik.
               </p>
-            </div>
+            </motion.div>
 
             <div className="space-y-6">
               {[
@@ -384,7 +419,14 @@ export default function Index() {
                 { icon: <Leaf className="w-5 h-5" />, title: 'Langkah Ramah Alam', desc: 'Kami berkomitmen melestarikan bumi Papua dengan menggunakan bahan berkualitas tinggi yang awet serta proses produksi yang bertanggung jawab.' },
                 { icon: <Handshake className="w-5 h-5" />, title: 'Kesejahteraan Bersama', desc: 'Setiap transaksi berkontribusi langsung dalam mendukung ekonomi kreatif mama-mama perajin noken dan seniman lokal di Papua.' },
               ].map((item, idx) => (
-                <div key={idx} className="flex gap-4 items-start group">
+                <motion.div
+                  key={idx}
+                  initial={{ opacity: 0, x: 40 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true, margin: "-40px" }}
+                  transition={{ duration: 0.6, delay: idx * 0.15, ease: "easeOut" }}
+                  className="flex gap-4 items-start group"
+                >
                   <div className="flex-shrink-0 w-12 h-12 rounded-2xl flex items-center justify-center bg-primary/10 text-primary transition-all duration-300 group-hover:bg-primary group-hover:text-white group-hover:shadow-md">
                     {item.icon}
                   </div>
@@ -392,7 +434,7 @@ export default function Index() {
                     <h3 className="text-lg font-bold text-foreground mb-1 group-hover:text-primary transition-colors">{item.title}</h3>
                     <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
                   </div>
-                </div>
+                </motion.div>
               ))}
             </div>
           </div>

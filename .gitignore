@@ -26,3 +26,6 @@ dist-ssr
 .config/
 .env
 apparel_papua_backup.sql
+
+# Local Netlify folder
+.netlify
