@@ -90,7 +90,7 @@ export const login = async (req, res) => {
       });
     }
 
-    // Cari user di tabel users (termasuk admin berdasarkan role)
+    // Cari user di tabel users
     const [users] = await pool.query(
       'SELECT id, name, email, password, role, address, phone FROM users WHERE email = ?',
       [email.toLowerCase()]
@@ -120,7 +120,7 @@ export const login = async (req, res) => {
       });
     }
 
-    const token = generateToken({ id: user.id, email: user.email, role: user.role });
+    const token = generateToken({ id: user.id, email: user.email, role: 'user' });
 
     return res.status(200).json({
       success: true,
@@ -131,7 +131,7 @@ export const login = async (req, res) => {
           id: user.id,
           name: user.name,
           email: user.email,
-          role: user.role,
+          role: 'user',
           address: user.address,
           phone: user.phone,
         },
@@ -159,9 +159,9 @@ export const adminLogin = async (req, res) => {
       });
     }
 
-    // Cari admin dari tabel users berdasarkan role='admin'
+    // Cari admin dari tabel admins yang terpisah
     const [admins] = await pool.query(
-      "SELECT id, name, email, password FROM users WHERE email = ? AND role = 'admin'",
+      "SELECT id, name, email, password FROM admins WHERE email = ?",
       [email.toLowerCase()]
     );
 
@@ -205,31 +205,33 @@ export const adminLogin = async (req, res) => {
 // ─── GET /api/auth/me ─────────────────────────────────────────────
 export const getMe = async (req, res) => {
   try {
-    const [users] = await pool.query(
-      'SELECT id, name, email, role, address, phone, created_at FROM users WHERE id = ?',
-      [req.user.id]
-    );
+    let query = 'SELECT id, name, email, role, address, phone, created_at FROM users WHERE id = ?';
+    if (req.user.role === 'admin') {
+      query = 'SELECT id, name, email, created_at FROM admins WHERE id = ?';
+    }
 
-    if (users.length === 0) {
+    const [results] = await pool.query(query, [req.user.id]);
+
+    if (results.length === 0) {
       return res.status(404).json({
         success: false,
-        message: 'User tidak ditemukan',
+        message: 'User/Admin tidak ditemukan',
       });
     }
 
-    const user = users[0];
+    const userOrAdmin = results[0];
 
     return res.status(200).json({
       success: true,
-      message: 'Data user berhasil diambil',
+      message: 'Data user/admin berhasil diambil',
       data: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        address: user.address,
-        phone: user.phone,
-        createdAt: user.created_at,
+        id: userOrAdmin.id,
+        name: userOrAdmin.name,
+        email: userOrAdmin.email,
+        role: req.user.role,
+        address: userOrAdmin.address || null,
+        phone: userOrAdmin.phone || null,
+        createdAt: userOrAdmin.created_at,
       },
     });
   } catch (error) {

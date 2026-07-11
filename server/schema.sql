@@ -165,6 +165,16 @@ CREATE TABLE IF NOT EXISTS bank_accounts (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- 13. Table: admins
+CREATE TABLE IF NOT EXISTS admins (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- ───────────────────────────────────────────────────────────
 -- SEED DATA AWAL (MOCK DATA)
 -- ───────────────────────────────────────────────────────────
@@ -172,8 +182,10 @@ CREATE TABLE IF NOT EXISTS bank_accounts (
 -- Seed default user & admin
 -- Password untuk admin: admin123 (terenkripsi bcrypt)
 -- Password untuk user: customer123 (terenkripsi bcrypt)
+INSERT INTO admins (name, email, password) VALUES
+('Super Admin', 'admin@nokenpapua.com', '$2b$10$gM.L52P6a/8n1164Eewcbe.NqIex5dYcR/4XvNbeVn4g.J3v7gE2a');
+
 INSERT INTO users (name, email, password, role) VALUES 
-('Administrator', 'admin@nokenpapua.com', '$2b$10$gM.L52P6a/8n1164Eewcbe.NqIex5dYcR/4XvNbeVn4g.J3v7gE2a', 'admin'),
 ('Jeremy Nathanael', 'customer@nokenpapua.com', '$2b$10$9v3r/Fm5v5K6kR6KzG/j1eQG8y1g6V/84e4f71/a5s.9g7f.E5M.J', 'user');
 
 -- Seed Categories

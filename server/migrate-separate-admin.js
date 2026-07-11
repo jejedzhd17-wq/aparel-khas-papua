@@ -9,11 +9,12 @@ async function migrate() {
     await pool.query(`
       CREATE TABLE IF NOT EXISTS admins (
         id INT AUTO_INCREMENT PRIMARY KEY,
-        nama VARCHAR(100) NOT NULL,
-        email VARCHAR(100) UNIQUE NOT NULL,
+        name VARCHAR(255) NOT NULL,
+        email VARCHAR(255) UNIQUE NOT NULL,
         password VARCHAR(255) NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
     `);
     console.log("✅ Tabel 'admins' siap.");
 
@@ -23,7 +24,7 @@ async function migrate() {
       // Hash password 'admin123'
       const hashedPassword = await bcrypt.hash('admin123', 10);
       await pool.query(
-        'INSERT INTO admins (nama, email, password) VALUES (?, ?, ?)',
+        'INSERT INTO admins (name, email, password) VALUES (?, ?, ?)',
         ['Super Admin', 'admin@nokenpapua.com', hashedPassword]
       );
       console.log("✅ Default admin (admin@nokenpapua.com) berhasil di-seed di tabel 'admins'.");
