@@ -19,15 +19,44 @@ interface CheckoutForm {
 }
 
 const INDONESIA_REGIONS: Record<string, string[]> = {
-  'Papua': ['Kota Jayapura', 'Kabupaten Jayapura', 'Kabupaten Merauke', 'Kabupaten Mimika', 'Kabupaten Biak Numfor', 'Kabupaten Kepulauan Yapen'],
-  'Papua Barat': ['Kota Sorong', 'Kabupaten Manokwari', 'Kabupaten Fakfak', 'Kabupaten Raja Ampat', 'Kabupaten Kaimana'],
-  'DKI Jakarta': ['Jakarta Pusat', 'Jakarta Selatan', 'Jakarta Barat', 'Jakarta Utara', 'Jakarta Timur'],
-  'Jawa Barat': ['Kota Bandung', 'Kota Bogor', 'Kota Bekasi', 'Kota Depok', 'Kota Tasikmalaya', 'Kota Cirebon'],
-  'Jawa Timur': ['Kota Surabaya', 'Kota Malang', 'Kota Kediri', 'Kota Madiun', 'Kota Pasuruan'],
-  'Jawa Tengah': ['Kota Semarang', 'Kota Surakarta', 'Kota Yogyakarta', 'Kota Magelang'],
-  'Sulawesi Selatan': ['Kota Makassar', 'Kota Parepare', 'Kabupaten Gowa', 'Kabupaten Bone'],
-  'Sumatera Utara': ['Kota Medan', 'Kota Binjai', 'Kota Pematangsiantar', 'Kabupaten Deli Serdang'],
-  'Bali': ['Kota Denpasar', 'Kabupaten Badung', 'Kabupaten Gianyar', 'Kabupaten Buleleng']
+  'Aceh': ['Kota Banda Aceh', 'Kota Lhokseumawe', 'Kota Langsa', 'Kabupaten Aceh Besar', 'Kabupaten Aceh Utara', 'Lainnya (Tulis Manual)'],
+  'Bali': ['Kota Denpasar', 'Kabupaten Badung', 'Kabupaten Gianyar', 'Kabupaten Buleleng', 'Kabupaten Tabanan', 'Lainnya (Tulis Manual)'],
+  'Banten': ['Kota Tangerang', 'Kota Tangerang Selatan', 'Kota Serang', 'Kota Cilegon', 'Kabupaten Tangerang', 'Lainnya (Tulis Manual)'],
+  'Bengkulu': ['Kota Bengkulu', 'Kabupaten Rejang Lebong', 'Kabupaten Bengkulu Utara', 'Lainnya (Tulis Manual)'],
+  'DI Yogyakarta': ['Kota Yogyakarta', 'Kabupaten Sleman', 'Kabupaten Bantul', 'Kabupaten Gunungkidul', 'Kabupaten Kulon Progo', 'Lainnya (Tulis Manual)'],
+  'DKI Jakarta': ['Jakarta Pusat', 'Jakarta Selatan', 'Jakarta Barat', 'Jakarta Utara', 'Jakarta Timur', 'Lainnya (Tulis Manual)'],
+  'Gorontalo': ['Kota Gorontalo', 'Kabupaten Gorontalo', 'Kabupaten Bone Bolango', 'Lainnya (Tulis Manual)'],
+  'Jambi': ['Kota Jambi', 'Kota Sungai Penuh', 'Kabupaten Muaro Jambi', 'Lainnya (Tulis Manual)'],
+  'Jawa Barat': ['Kota Bandung', 'Kota Bekasi', 'Kota Depok', 'Kota Bogor', 'Kota Tasikmalaya', 'Kota Cimahi', 'Kota Sukabumi', 'Kota Cirebon', 'Kabupaten Garut', 'Kabupaten Karawang', 'Lainnya (Tulis Manual)'],
+  'Jawa Tengah': ['Kota Semarang', 'Kota Surakarta (Solo)', 'Kota Magelang', 'Kota Tegal', 'Kota Pekalongan', 'Kabupaten Banyumas', 'Lainnya (Tulis Manual)'],
+  'Jawa Timur': ['Kota Surabaya', 'Kota Malang', 'Kota Kediri', 'Kota Madiun', 'Kota Pasuruan', 'Kota Probolinggo', 'Kota Blitar', 'Kota Batu', 'Kabupaten Sidoarjo', 'Kabupaten Gresik', 'Lainnya (Tulis Manual)'],
+  'Kalimantan Barat': ['Kota Pontianak', 'Kota Singkawang', 'Kabupaten Kubu Raya', 'Kabupaten Ketapang', 'Lainnya (Tulis Manual)'],
+  'Kalimantan Selatan': ['Kota Banjarmasin', 'Kota Banjarbaru', 'Kabupaten Banjar', 'Kabupaten Tanah Bumbu', 'Lainnya (Tulis Manual)'],
+  'Kalimantan Tengah': ['Kota Palangkaraya', 'Kabupaten Kotawaringin Timur', 'Kabupaten Kotawaringin Barat', 'Lainnya (Tulis Manual)'],
+  'Kalimantan Timur': ['Kota Samarinda', 'Kota Balikpapan', 'Kota Bontang', 'Kabupaten Kutai Kartanegara', 'Lainnya (Tulis Manual)'],
+  'Kalimantan Utara': ['Kota Tarakan', 'Kabupaten Bulungan', 'Kabupaten Nunukan', 'Lainnya (Tulis Manual)'],
+  'Kepulauan Bangka Belitung': ['Kota Pangkalpinang', 'Kabupaten Bangka', 'Kabupaten Belitung', 'Lainnya (Tulis Manual)'],
+  'Kepulauan Riau': ['Kota Batam', 'Kota Tanjungpinang', 'Kabupaten Bintan', 'Kabupaten Karimun', 'Lainnya (Tulis Manual)'],
+  'Lampung': ['Kota Bandar Lampung', 'Kota Metro', 'Kabupaten Lampung Selatan', 'Kabupaten Lampung Tengah', 'Lainnya (Tulis Manual)'],
+  'Maluku': ['Kota Ambon', 'Kota Tual', 'Kabupaten Maluku Tengah', 'Lainnya (Tulis Manual)'],
+  'Maluku Utara': ['Kota Ternate', 'Kota Tidore Kepulauan', 'Kabupaten Halmahera Utara', 'Lainnya (Tulis Manual)'],
+  'Nusa Tenggara Barat': ['Kota Mataram', 'Kota Bima', 'Kabupaten Lombok Barat', 'Kabupaten Lombok Tengah', 'Kabupaten Lombok Timur', 'Lainnya (Tulis Manual)'],
+  'Nusa Tenggara Timur': ['Kota Kupang', 'Kabupaten Sikka', 'Kabupaten Ende', 'Kabupaten Belu', 'Lainnya (Tulis Manual)'],
+  'Papua': ['Kota Jayapura', 'Kabupaten Jayapura', 'Kabupaten Merauke', 'Kabupaten Mimika', 'Kabupaten Biak Numfor', 'Kabupaten Kepulauan Yapen', 'Lainnya (Tulis Manual)'],
+  'Papua Barat': ['Kota Sorong', 'Kabupaten Manokwari', 'Kabupaten Fakfak', 'Kabupaten Raja Ampat', 'Kabupaten Kaimana', 'Lainnya (Tulis Manual)'],
+  'Papua Barat Daya': ['Kota Sorong', 'Kabupaten Sorong Selatan', 'Kabupaten Raja Ampat', 'Lainnya (Tulis Manual)'],
+  'Papua Pegunungan': ['Kabupaten Jayawijaya', 'Kabupaten Lanny Jaya', 'Kabupaten Tolikara', 'Lainnya (Tulis Manual)'],
+  'Papua Selatan': ['Kabupaten Merauke', 'Kabupaten Mappi', 'Kabupaten Asmat', 'Kabupaten Boven Digoel', 'Lainnya (Tulis Manual)'],
+  'Papua Tengah': ['Kabupaten Nabire', 'Kabupaten Mimika', 'Kabupaten Puncak', 'Lainnya (Tulis Manual)'],
+  'Riau': ['Kota Pekanbaru', 'Kota Dumai', 'Kabupaten Kampar', 'Kabupaten Bengkalis', 'Lainnya (Tulis Manual)'],
+  'Sulawesi Barat': ['Kabupaten Mamuju', 'Kabupaten Polewali Mandar', 'Kabupaten Majene', 'Lainnya (Tulis Manual)'],
+  'Sulawesi Selatan': ['Kota Makassar', 'Kota Parepare', 'Kota Palopo', 'Kabupaten Gowa', 'Kabupaten Bone', 'Lainnya (Tulis Manual)'],
+  'Sulawesi Tengah': ['Kota Palu', 'Kabupaten Donggala', 'Kabupaten Poso', 'Kabupaten Sigi', 'Lainnya (Tulis Manual)'],
+  'Sulawesi Tenggara': ['Kota Kendari', 'Kota Baubau', 'Kabupaten Kolaka', 'Kabupaten Konawe', 'Lainnya (Tulis Manual)'],
+  'Sulawesi Utara': ['Kota Manado', 'Kota Bitung', 'Kota Tomohon', 'Kabupaten Minahasa', 'Lainnya (Tulis Manual)'],
+  'Sumatera Barat': ['Kota Padang', 'Kota Bukittinggi', 'Kota Payakumbuh', 'Kota Solok', 'Lainnya (Tulis Manual)'],
+  'Sumatera Selatan': ['Kota Palembang', 'Kota Lubuklinggau', 'Kota Prabumulih', 'Lainnya (Tulis Manual)'],
+  'Sumatera Utara': ['Kota Medan', 'Kota Binjai', 'Kota Pematangsiantar', 'Kabupaten Deli Serdang', 'Kabupaten Langkat', 'Lainnya (Tulis Manual)']
 };
 
 export default function Checkout() {
@@ -36,6 +65,7 @@ export default function Checkout() {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(null);
   const [selectedBank, setSelectedBank] = useState('bca');
   const [selectedEWallet, setSelectedEWallet] = useState('ovo');
+  const [customCity, setCustomCity] = useState('');
   const [form, setForm] = useState<CheckoutForm>({
     fullName: '',
     email: '',
@@ -304,13 +334,22 @@ export default function Checkout() {
       return;
     }
 
+    let finalCity = form.city;
+    if (form.city === 'Lainnya (Tulis Manual)') {
+      if (!customCity.trim()) {
+        toast.warning('Silakan masukkan nama Kota/Kabupaten Anda.');
+        return;
+      }
+      finalCity = customCity.trim();
+    }
+
     // Menyiapkan body request sesuai dengan format Controller backend
     const orderData = {
       fullName: form.fullName,
       email: form.email,
       phone: form.phone,
       address: form.address,
-      city: form.city,
+      city: finalCity,
       province: form.province,
       postalCode: form.postalCode,
       paymentMethod: paymentMethod,
@@ -345,7 +384,7 @@ export default function Checkout() {
         // Simpan order di localStorage untuk cadangan visual/state jika diperlukan halaman berikutnya
         const order = {
           id: orderId,
-          customer: form,
+          customer: { ...form, city: finalCity },
           items: items,
           total: total,
           paymentMethod: paymentMethod,
@@ -478,6 +517,7 @@ export default function Checkout() {
                           province: selectedProv,
                           city: INDONESIA_REGIONS[selectedProv]?.[0] || ''
                         }));
+                        setCustomCity(''); // Reset custom city saat provinsi berubah
                       }}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm bg-white"
                       required
@@ -506,6 +546,19 @@ export default function Checkout() {
                         <option key={city} value={city}>{city}</option>
                       ))}
                     </select>
+
+                    {form.city === 'Lainnya (Tulis Manual)' && (
+                      <div className="mt-2 animate-in fade-in slide-in-from-top-1">
+                        <input
+                          type="text"
+                          placeholder="Tulis nama Kota/Kabupaten..."
+                          value={customCity}
+                          onChange={(e) => setCustomCity(e.target.value)}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                          required
+                        />
+                      </div>
+                    )}
                   </div>
 
                   <div>
