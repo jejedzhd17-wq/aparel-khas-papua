@@ -28,7 +28,7 @@ const INDONESIA_REGIONS: Record<string, string[]> = {
   'Gorontalo': ['Kota Gorontalo', 'Kabupaten Gorontalo', 'Kabupaten Bone Bolango', 'Lainnya (Tulis Manual)'],
   'Jambi': ['Kota Jambi', 'Kota Sungai Penuh', 'Kabupaten Muaro Jambi', 'Lainnya (Tulis Manual)'],
   'Jawa Barat': ['Kota Bandung', 'Kota Bekasi', 'Kota Depok', 'Kota Bogor', 'Kota Tasikmalaya', 'Kota Cimahi', 'Kota Sukabumi', 'Kota Cirebon', 'Kabupaten Garut', 'Kabupaten Karawang', 'Lainnya (Tulis Manual)'],
-  'Jawa Tengah': ['Kota Semarang', 'Kota Surakarta (Solo)', 'Kota Magelang', 'Kota Tegal', 'Kota Pekalongan', 'Kabupaten Banyumas', 'Lainnya (Tulis Manual)'],
+  'Jawa Tengah': ['Kota Semarang', 'Kota Surakarta', 'Kota Magelang', 'Kota Tegal', 'Kota Pekalongan', 'Kabupaten Banyumas', 'Lainnya (Tulis Manual)'],
   'Jawa Timur': ['Kota Surabaya', 'Kota Malang', 'Kota Kediri', 'Kota Madiun', 'Kota Pasuruan', 'Kota Probolinggo', 'Kota Blitar', 'Kota Batu', 'Kabupaten Sidoarjo', 'Kabupaten Gresik', 'Lainnya (Tulis Manual)'],
   'Kalimantan Barat': ['Kota Pontianak', 'Kota Singkawang', 'Kabupaten Kubu Raya', 'Kabupaten Ketapang', 'Lainnya (Tulis Manual)'],
   'Kalimantan Selatan': ['Kota Banjarmasin', 'Kota Banjarbaru', 'Kabupaten Banjar', 'Kabupaten Tanah Bumbu', 'Lainnya (Tulis Manual)'],
@@ -42,12 +42,18 @@ const INDONESIA_REGIONS: Record<string, string[]> = {
   'Maluku Utara': ['Kota Ternate', 'Kota Tidore Kepulauan', 'Kabupaten Halmahera Utara', 'Lainnya (Tulis Manual)'],
   'Nusa Tenggara Barat': ['Kota Mataram', 'Kota Bima', 'Kabupaten Lombok Barat', 'Kabupaten Lombok Tengah', 'Kabupaten Lombok Timur', 'Lainnya (Tulis Manual)'],
   'Nusa Tenggara Timur': ['Kota Kupang', 'Kabupaten Sikka', 'Kabupaten Ende', 'Kabupaten Belu', 'Lainnya (Tulis Manual)'],
-  'Papua': ['Kota Jayapura', 'Kabupaten Jayapura', 'Kabupaten Merauke', 'Kabupaten Mimika', 'Kabupaten Biak Numfor', 'Kabupaten Kepulauan Yapen', 'Lainnya (Tulis Manual)'],
-  'Papua Barat': ['Kota Sorong', 'Kabupaten Manokwari', 'Kabupaten Fakfak', 'Kabupaten Raja Ampat', 'Kabupaten Kaimana', 'Lainnya (Tulis Manual)'],
-  'Papua Barat Daya': ['Kota Sorong', 'Kabupaten Sorong Selatan', 'Kabupaten Raja Ampat', 'Lainnya (Tulis Manual)'],
-  'Papua Pegunungan': ['Kabupaten Jayawijaya', 'Kabupaten Lanny Jaya', 'Kabupaten Tolikara', 'Lainnya (Tulis Manual)'],
+  // Papua (wilayah utara setelah pemekaran 2022)
+  'Papua': ['Kota Jayapura', 'Kabupaten Jayapura', 'Kabupaten Biak Numfor', 'Kabupaten Kepulauan Yapen', 'Kabupaten Sarmi', 'Kabupaten Waropen', 'Lainnya (Tulis Manual)'],
+  // Papua Barat (setelah pemekaran tidak termasuk Sorong & Raja Ampat)
+  'Papua Barat': ['Kabupaten Manokwari', 'Kabupaten Fakfak', 'Kabupaten Kaimana', 'Kabupaten Manokwari Selatan', 'Kabupaten Pegunungan Arfak', 'Kabupaten Teluk Bintuni', 'Kabupaten Teluk Wondama', 'Lainnya (Tulis Manual)'],
+  // Papua Barat Daya (provinsi baru 2022, ibukota Kota Sorong)
+  'Papua Barat Daya': ['Kota Sorong', 'Kabupaten Sorong', 'Kabupaten Sorong Selatan', 'Kabupaten Raja Ampat', 'Kabupaten Maybrat', 'Kabupaten Tambraw', 'Lainnya (Tulis Manual)'],
+  // Papua Pegunungan (provinsi baru 2022, ibukota Wamena)
+  'Papua Pegunungan': ['Kabupaten Jayawijaya', 'Kabupaten Lanny Jaya', 'Kabupaten Tolikara', 'Kabupaten Puncak Jaya', 'Kabupaten Yahukimo', 'Lainnya (Tulis Manual)'],
+  // Papua Selatan (provinsi baru 2022, ibukota Merauke)
   'Papua Selatan': ['Kabupaten Merauke', 'Kabupaten Mappi', 'Kabupaten Asmat', 'Kabupaten Boven Digoel', 'Lainnya (Tulis Manual)'],
-  'Papua Tengah': ['Kabupaten Nabire', 'Kabupaten Mimika', 'Kabupaten Puncak', 'Lainnya (Tulis Manual)'],
+  // Papua Tengah (provinsi baru 2022, ibukota Nabire)
+  'Papua Tengah': ['Kabupaten Nabire', 'Kabupaten Mimika', 'Kabupaten Puncak', 'Kabupaten Intan Jaya', 'Kabupaten Dogiyai', 'Kabupaten Deiyai', 'Kabupaten Paniai', 'Lainnya (Tulis Manual)'],
   'Riau': ['Kota Pekanbaru', 'Kota Dumai', 'Kabupaten Kampar', 'Kabupaten Bengkalis', 'Lainnya (Tulis Manual)'],
   'Sulawesi Barat': ['Kabupaten Mamuju', 'Kabupaten Polewali Mandar', 'Kabupaten Majene', 'Lainnya (Tulis Manual)'],
   'Sulawesi Selatan': ['Kota Makassar', 'Kota Parepare', 'Kota Palopo', 'Kabupaten Gowa', 'Kabupaten Bone', 'Lainnya (Tulis Manual)'],
@@ -86,7 +92,13 @@ export default function Checkout() {
 
     if (savedForm) {
       try {
-        setForm(JSON.parse(savedForm));
+        const parsedForm = JSON.parse(savedForm);
+        setForm(parsedForm);
+        // Pulihkan customCity jika sebelumnya memilih 'Lainnya (Tulis Manual)'
+        const savedCustomCity = localStorage.getItem('noken-checkout-customcity');
+        if (parsedForm.city === 'Lainnya (Tulis Manual)' && savedCustomCity) {
+          setCustomCity(savedCustomCity);
+        }
       } catch {}
     } else {
       // Fallback: isi dari data user jika belum ada form tersimpan
@@ -114,6 +126,13 @@ export default function Checkout() {
   useEffect(() => {
     localStorage.setItem('noken-checkout-form', JSON.stringify(form));
   }, [form]);
+
+  // ─── Simpan customCity ke localStorage setiap kali berubah ───────────────
+  useEffect(() => {
+    if (customCity) {
+      localStorage.setItem('noken-checkout-customcity', customCity);
+    }
+  }, [customCity]);
 
   useEffect(() => {
     if (paymentMethod) localStorage.setItem('noken-checkout-payment', paymentMethod);
