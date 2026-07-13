@@ -119,7 +119,7 @@ export default function AdminLogin() {
           </button>
         </form>
 
-        {/* Demo Credentials Box */}
+        {/* Kotak Akun Demo */}
         <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
           <p className="text-xs font-semibold text-blue-900 mb-3">Demo Credentials:</p>
           <div className="space-y-2 text-xs text-blue-800">
@@ -132,7 +132,7 @@ export default function AdminLogin() {
           </div>
         </div>
 
-        {/* Back to Store */}
+        {/* Kembali ke Toko */}
         <div className="text-center mt-6">
           <a href="/" className="text-primary hover:underline text-sm font-semibold">
             ← Kembali ke Store

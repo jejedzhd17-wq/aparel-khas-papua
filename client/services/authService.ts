@@ -1,9 +1,9 @@
-// User interface
+// Antarmuka Pengguna (User Interface)
 export interface RegisteredUser {
   id: string;
   name: string;
   email: string;
-  password: string; // In production, this would be hashed
+  password: string; // Di lingkungan produksi, ini harus di-hash
   createdAt: string;
 }
 
@@ -16,7 +16,7 @@ export interface LoggedInUser {
 const USERS_STORAGE_KEY = 'noken-registered-users';
 const CURRENT_USER_KEY = 'noken-user';
 
-// Get all registered users
+// Ambil semua pengguna terdaftar
 export function getAllUsers(): RegisteredUser[] {
   try {
     const users = localStorage.getItem(USERS_STORAGE_KEY);
@@ -26,15 +26,15 @@ export function getAllUsers(): RegisteredUser[] {
   }
 }
 
-// Check if email already exists
+// Periksa apakah email sudah terdaftar
 export function emailExists(email: string): boolean {
   const users = getAllUsers();
   return users.some(u => u.email.toLowerCase() === email.toLowerCase());
 }
 
-// Register a new user
+// Daftarkan pengguna baru
 export function registerUser(name: string, email: string, password: string): { success: boolean; message: string } {
-  // Validate inputs
+  // Validasi masukan
   if (!name || !email || !password) {
     return { success: false, message: 'Semua field harus diisi' };
   }
@@ -47,18 +47,18 @@ export function registerUser(name: string, email: string, password: string): { s
     return { success: false, message: 'Password minimal 6 karakter' };
   }
 
-  // Check if email already exists
+  // Periksa apakah email sudah terdaftar
   if (emailExists(email)) {
     return { success: false, message: 'Email sudah terdaftar' };
   }
 
-  // Create new user
+  // Buat pengguna baru
   const users = getAllUsers();
   const newUser: RegisteredUser = {
     id: `user_${Date.now()}`,
     name,
     email: email.toLowerCase(),
-    password, // In production, hash this!
+    password, // Di lingkungan produksi, lakukan hash!
     createdAt: new Date().toISOString(),
   };
 
@@ -68,7 +68,7 @@ export function registerUser(name: string, email: string, password: string): { s
   return { success: true, message: 'Akun berhasil dibuat' };
 }
 
-// Login user
+// Login pengguna
 export function loginUser(email: string, password: string): { success: boolean; message: string; user?: LoggedInUser } {
   if (!email || !password) {
     return { success: false, message: 'Email dan password harus diisi' };
@@ -89,7 +89,7 @@ export function loginUser(email: string, password: string): { success: boolean; 
     return { success: false, message: 'Password salah' };
   }
 
-  // Save logged-in user
+  // Simpan data login pengguna
   const loggedInUser: LoggedInUser = {
     id: user.id,
     name: user.name,
@@ -101,7 +101,7 @@ export function loginUser(email: string, password: string): { success: boolean; 
   return { success: true, message: 'Login berhasil', user: loggedInUser };
 }
 
-// Get current logged-in user
+// Ambil data pengguna yang sedang login
 export function getCurrentUser(): LoggedInUser | null {
   try {
     const user = localStorage.getItem(CURRENT_USER_KEY);
@@ -111,13 +111,13 @@ export function getCurrentUser(): LoggedInUser | null {
   }
 }
 
-// Logout user
+// Logout pengguna
 export function logout(): void {
   localStorage.removeItem(CURRENT_USER_KEY);
   localStorage.removeItem('noken-token');
 }
 
-// Check if user is authenticated
+// Periksa apakah pengguna sudah terautentikasi
 export function isAuthenticated(): boolean {
   return getCurrentUser() !== null;
 }
