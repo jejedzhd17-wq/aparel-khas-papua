@@ -67,13 +67,13 @@ export default function OrderConfirmation() {
     const fetchOrderDetails = async () => {
       if (!orderId) return;
 
-      // Fallback local first
+      // Gunakan fallback lokal terlebih dahulu
       const savedOrder = localStorage.getItem(`order-${orderId}`);
       if (savedOrder) {
         setOrder(JSON.parse(savedOrder));
       }
 
-      // Realtime fetch from DB
+      // Ambil data real-time dari database
       const token = localStorage.getItem('noken-token');
       if (token) {
         try {
@@ -110,7 +110,7 @@ export default function OrderConfirmation() {
               timestamp: o.timestamp,
             };
             setOrder(mappedOrder);
-            // Sync to local storage
+            // Sinkronkan ke penyimpanan lokal
             localStorage.setItem(`order-${orderId}`, JSON.stringify(mappedOrder));
           }
         } catch (err) {
@@ -243,7 +243,7 @@ export default function OrderConfirmation() {
       </section>
 
       <div className="max-w-4xl mx-auto px-4 py-12">
-        {/* Order ID */}
+        {/* ID Pesanan */}
         <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-8">
           <p className="text-sm text-muted-foreground mb-2">ID Pesanan Anda</p>
           <div className="flex items-center gap-3">
@@ -259,11 +259,11 @@ export default function OrderConfirmation() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Payment Instructions & Customer Info */}
+          {/* Instruksi Pembayaran & Info Pelanggan */}
           <div className="lg:col-span-2 space-y-8">
             {paymentInstructions()}
 
-            {/* Customer Information */}
+            {/* Informasi Pelanggan */}
             <div className="bg-white border border-gray-200 rounded-lg p-6">
               <h2 className="text-2xl font-bold text-foreground mb-4 font-playfair">
                 Data Pengiriman
@@ -292,7 +292,7 @@ export default function OrderConfirmation() {
               </div>
             </div>
 
-            {/* Items */}
+            {/* Daftar Item */}
             <div className="bg-white border border-gray-200 rounded-lg p-6">
               <h2 className="text-2xl font-bold text-foreground mb-4 font-playfair">
                 Detail Pesanan

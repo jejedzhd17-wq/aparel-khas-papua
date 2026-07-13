@@ -225,7 +225,7 @@ export default function Category() {
   useEffect(() => {
     if (!categoryInfo || !categorySlug) return;
 
-    // Show skeleton immediately — don't flash stale local data
+    // Tampilkan skeleton segera — jangan tampilkan data lokal lama
     setProducts([]);
     setIsLoading(true);
 
@@ -246,7 +246,7 @@ export default function Category() {
           }));
           setProducts(mapped);
         } else {
-          // API returned empty — category truly has no products
+          // API mengembalikan kosong — kategori benar-benar tidak memiliki produk
           setProducts([]);
         }
       } catch (err) {
@@ -282,7 +282,7 @@ export default function Category() {
     <div className="min-h-screen">
       <Navigation />
 
-      {/* Page Header */}
+      {/* Header Halaman */}
       <section className={`bg-gradient-to-r ${categoryInfo.bgLight} py-12 px-4`}>
         <div className="max-w-7xl mx-auto">
           <Link
@@ -310,7 +310,7 @@ export default function Category() {
         </div>
       </section>
 
-      {/* Products Section */}
+      {/* Bagian Produk */}
       <div className="max-w-7xl mx-auto px-4 py-12 md:py-16">
         {isLoading && products.length === 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 md:gap-8">
@@ -340,7 +340,7 @@ export default function Category() {
                   >
                     <div className="bg-white rounded-xl overflow-hidden border border-gray-100 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 h-full flex flex-col justify-between">
                       <div>
-                        {/* Product Image */}
+                        {/* Gambar Produk */}
                         <div className="relative h-36 xs:h-40 sm:h-48 md:h-64 overflow-hidden bg-gray-100">
                           <img
                             src={getResolvedSrc(product.image)}
@@ -352,20 +352,20 @@ export default function Category() {
                           </div>
                         </div>
 
-                        {/* Product Info */}
+                        {/* Informasi Produk */}
                         <div className="p-4">
                           <h3 className="text-sm sm:text-base md:text-lg font-semibold text-foreground mb-1 sm:mb-2 group-hover:text-primary transition-colors line-clamp-2">
                             {product.name}
                           </h3>
 
-                          {/* Rating */}
+                          {/* Penilaian */}
                           <div className="flex items-center gap-1 mb-3">
                             {[...Array(product.rating)].map((_, i) => (
                               <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
                             ))}
                           </div>
 
-                          {/* Price */}
+                          {/* Harga */}
                           <div className="flex items-baseline justify-between mb-4">
                             <span className="text-lg sm:text-xl md:text-2xl font-bold text-primary">
                               Rp {Number(product.price).toLocaleString('id-ID')}
@@ -375,7 +375,7 @@ export default function Category() {
                       </div>
 
                       <div className="p-4 pt-0">
-                        {/* View Button */}
+                        {/* Tombol Lihat Detail */}
                         <button className="w-full bg-primary text-white font-semibold text-xs sm:text-sm py-2 rounded-lg hover:bg-primary/90 transition-colors duration-200">
                           Lihat Detail
                         </button>

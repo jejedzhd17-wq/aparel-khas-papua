@@ -70,14 +70,14 @@ export const getAllProducts = async (req, res) => {
 
     const [products] = await pool.query(query, queryParams);
 
-    // Count query
+    // Query hitung total produk
     let countQuery = `SELECT COUNT(*) as total FROM products p LEFT JOIN categories c ON p.category_id = c.id WHERE 1=1`;
     const countParams = [];
     if (search) { countQuery += ' AND (p.name LIKE ? OR p.description LIKE ?)'; countParams.push(`%${search}%`, `%${search}%`); }
     if (category) { countQuery += ' AND (c.name LIKE ? OR c.slug LIKE ?)'; countParams.push(`%${category}%`, `%${category}%`); }
     const [[{ total }]] = await pool.query(countQuery, countParams);
 
-    // Resolve images
+    // Ambil gambar untuk setiap produk
     const productsWithImages = await Promise.all(products.map(async (p) => {
       const image = await getPrimaryImage(p.id);
       return formatProduct(p, image);

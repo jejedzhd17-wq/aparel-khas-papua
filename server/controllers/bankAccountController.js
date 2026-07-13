@@ -16,7 +16,7 @@ export const getAllBankAccounts = async (req, res) => {
   }
 };
 
-// GET /api/bank-accounts/admin — semua termasuk nonaktif (admin only)
+// GET /api/bank-accounts/admin — semua termasuk nonaktif (khusus admin)
 export const getAllBankAccountsAdmin = async (req, res) => {
   try {
     const [accounts] = await pool.query(
@@ -29,7 +29,7 @@ export const getAllBankAccountsAdmin = async (req, res) => {
   }
 };
 
-// POST /api/bank-accounts — tambah rekening baru (admin only)
+// POST /api/bank-accounts — tambah rekening baru (khusus admin)
 export const createBankAccount = async (req, res) => {
   try {
     const { type, name, account_number, account_holder, color, sort_order, is_active } = req.body;
@@ -48,7 +48,7 @@ export const createBankAccount = async (req, res) => {
   }
 };
 
-// PUT /api/bank-accounts/:id — update rekening (admin only)
+// PUT /api/bank-accounts/:id — update rekening (khusus admin)
 export const updateBankAccount = async (req, res) => {
   try {
     const { id } = req.params;
@@ -77,7 +77,7 @@ export const updateBankAccount = async (req, res) => {
   }
 };
 
-// DELETE /api/bank-accounts/:id (admin only)
+// DELETE /api/bank-accounts/:id (khusus admin)
 export const deleteBankAccount = async (req, res) => {
   try {
     const { id } = req.params;

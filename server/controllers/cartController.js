@@ -10,7 +10,7 @@ const getProductImage = async (productId) => {
 };
 
 // ─── GET /api/cart ────────────────────────────────────────────────
-// New schema: cart_items punya user_id langsung (tidak ada tabel carts)
+// Skema baru: cart_items punya user_id langsung (tidak ada tabel carts)
 export const getCart = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -25,7 +25,7 @@ export const getCart = async (req, res) => {
       WHERE ci.user_id = ?
     `, [userId]);
 
-    // Resolve images
+    // Ambil gambar produk
     const itemsWithImages = await Promise.all(items.map(async (item) => {
       const image = await getProductImage(item.id);
       return {

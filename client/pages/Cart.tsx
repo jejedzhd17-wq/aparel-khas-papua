@@ -16,7 +16,7 @@ const TifaIllustration = () => (
   >
     {/* Permukaan atas kulit Tifa */}
     <ellipse cx="50" cy="15" rx="20" ry="6" fill="currentColor" fillOpacity={0.1} />
-    {/* Badan Utama Tifa (hourglass shape) */}
+    {/* Badan Utama Tifa (bentuk jam pasir) */}
     <path d="M30 15c0 10 5 18 10 30s5 20 5 35c0 10-5 15-15 25h40c-10-10-15-15-15-25 0-15 5-23 5-35s5-20 10-30H30z" />
     {/* Motif etnik melingkar di pinggang Tifa */}
     <path d="M40 50h20M41 55h18M42 60h16" />
@@ -94,7 +94,7 @@ export default function Cart() {
 
       <div className="max-w-7xl mx-auto px-4 py-12">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Cart Items */}
+          {/* Daftar Keranjang */}
           <div className="lg:col-span-2">
             <div className="space-y-4">
               {items.map((item) => (
@@ -102,9 +102,9 @@ export default function Cart() {
                   key={`${item.id}-${item.size}`}
                   className="bg-white border border-gray-200 rounded-lg p-4 md:p-6 flex flex-col sm:flex-row gap-4"
                 >
-                  {/* Product Image + Info Row */}
+                  {/* Baris Gambar + Informasi Produk */}
                   <div className="flex gap-3 sm:gap-4 flex-1">
-                    {/* Product Image */}
+                    {/* Gambar Produk */}
                     <div className="flex-shrink-0">
                       <img
                         src={getResolvedSrc(item.image)}
@@ -113,7 +113,7 @@ export default function Cart() {
                       />
                     </div>
 
-                    {/* Product Info */}
+                    {/* Informasi Produk */}
                     <div className="flex-1">
                       <Link
                         to={`/product/${item.id}`}
@@ -130,7 +130,7 @@ export default function Cart() {
                     </div>
                   </div>
 
-                  {/* Quantity Controls */}
+                  {/* Kontrol Jumlah */}
                   <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-3 sm:gap-4 border-t sm:border-t-0 pt-3 sm:pt-0">
                     <div className="flex items-center gap-2 border border-gray-300 rounded-lg">
                       <button
@@ -160,7 +160,7 @@ export default function Cart() {
                       </button>
                     </div>
 
-                    {/* Subtotal & Delete */}
+                    {/* Subtotal & Hapus */}
                     <div className="text-right">
                       <p className="text-sm text-muted-foreground mb-2">
                         Subtotal: Rp{' '}
@@ -179,7 +179,7 @@ export default function Cart() {
               ))}
             </div>
 
-            {/* Continue Shopping Link */}
+            {/* Tombol Lanjut Belanja */}
             <Link
               to="/shop"
               className="mt-6 inline-flex items-center gap-2 text-primary font-semibold hover:gap-4 transition-all"
@@ -188,7 +188,7 @@ export default function Cart() {
             </Link>
           </div>
 
-          {/* Order Summary */}
+          {/* Ringkasan Pesanan */}
           <div className="lg:col-span-1">
             <div className="bg-gradient-to-br from-primary/10 to-secondary/10 rounded-lg p-6 sticky top-20">
               <h2 className="text-xl font-bold text-foreground mb-6">

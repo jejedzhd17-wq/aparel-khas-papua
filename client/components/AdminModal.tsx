@@ -16,7 +16,7 @@ export default function AdminModal({
   children,
   size = 'md',
 }: AdminModalProps) {
-  // Lock body scroll when modal is open
+  // Kunci scroll halaman ketika modal sedang terbuka
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
@@ -26,7 +26,7 @@ export default function AdminModal({
     return () => { document.body.style.overflow = ''; };
   }, [isOpen]);
 
-  // Close on ESC key
+  // Tutup modal saat tombol ESC ditekan
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
     window.addEventListener('keydown', onKey);
@@ -44,13 +44,13 @@ export default function AdminModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-      {/* Backdrop */}
+      {/* Latar belakang gelap */}
       <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
       />
 
-      {/* Modal — bottom sheet on mobile, centered on desktop */}
+      {/* Modal — tampil dari bawah di mobile, di tengah layar di desktop */}
       <div
         className={`
           relative bg-white w-full ${sizeClasses[size]}
@@ -59,7 +59,7 @@ export default function AdminModal({
           animate-in slide-in-from-bottom-4 sm:fade-in sm:zoom-in-95 duration-200
         `}
       >
-        {/* Drag handle — mobile only */}
+        {/* Gagang geser — khusus mobile */}
         <div className="flex justify-center pt-3 pb-0 sm:hidden flex-shrink-0">
           <div className="w-10 h-1 bg-gray-300 rounded-full" />
         </div>
@@ -76,7 +76,7 @@ export default function AdminModal({
           </button>
         </div>
 
-        {/* Content — scrollable */}
+        {/* Konten — dapat digulir */}
         <div className="flex-1 overflow-y-auto p-5">
           {children}
         </div>

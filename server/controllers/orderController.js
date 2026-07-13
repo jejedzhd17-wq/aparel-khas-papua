@@ -1,7 +1,7 @@
 import pool from '../config/db.js';
 import crypto from 'crypto';
 
-// Generate unique order ID: ORD-{timestamp}-{random4}
+// Buat ID order unik: ORD-{timestamp}-{4karakter acak}
 const generateOrderId = () => {
   const ts   = Date.now().toString(36).toUpperCase();
   const rand = crypto.randomBytes(2).toString('hex').toUpperCase();
@@ -51,7 +51,7 @@ export const createOrder = async (req, res) => {
 
       const product = productRows[0];
       if (product.stock < parseInt(quantity)) {
-        // Auto-restock untuk dev/testing
+        // Auto-restock untuk keperluan pengembangan/pengujian
         await connection.query('UPDATE products SET stock = 999 WHERE id = ?', [dbProductId]);
       }
 

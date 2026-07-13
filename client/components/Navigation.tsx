@@ -61,7 +61,7 @@ export default function Navigation() {
             </div>
           </Link>
 
-          {/* Desktop Menu */}
+          {/* Menu Desktop */}
           <div className="hidden md:flex items-center gap-8">
             {navLinks.map((link) => {
               const isActive = location.pathname === link.href;
@@ -78,7 +78,7 @@ export default function Navigation() {
               );
             })}
 
-            {/* User Menu */}
+            {/* Menu Pengguna */}
             {user ? (
               <div className="flex items-center gap-3 pl-8 border-l border-gray-200">
                 <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white font-bold">
@@ -121,7 +121,7 @@ export default function Navigation() {
             )}
           </div>
 
-          {/* Right side actions */}
+          {/* Tombol aksi di sebelah kanan */}
           <div className="flex items-center gap-4">
 
             <Link
@@ -149,7 +149,7 @@ export default function Navigation() {
               )}
             </Link>
 
-            {/* Mobile menu button */}
+            {/* Tombol menu mobile */}
             <button
               onClick={toggleMenu}
               className="md:hidden p-2 text-foreground hover:text-primary transition-colors"
@@ -160,7 +160,7 @@ export default function Navigation() {
           </div>
         </div>
 
-        {/* Mobile Menu */}
+        {/* Menu Mobile */}
         {isOpen && (
           <div className="md:hidden pb-4 border-t border-gray-200">
             {navLinks.map((link) => {
@@ -179,7 +179,7 @@ export default function Navigation() {
               );
             })}
 
-            {/* Mobile User Menu */}
+            {/* Menu Pengguna Mobile */}
             <div className="border-t border-gray-200 mt-2 pt-2">
               {user ? (
                 <>

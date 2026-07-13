@@ -52,12 +52,12 @@ export default function Index() {
   const [featured, setFeatured] = useState<any[]>(DEFAULT_FEATURED);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Seamless loop: 2 copies, snap when past halfway
+  // Loop tanpa batas: 2 salinan data, snap saat melewati setengah jalan
   const displayItems = featured.length > 0
     ? [...featured, ...featured, ...featured, ...featured]
     : [];
 
-  // Refs for scroll-based infinite ticker
+  // Ref untuk ticker bergulir tak terbatas berbasis scroll
   const scrollRef = useRef<HTMLDivElement>(null);
   const isInteracting = useRef(false);
   const animFrameRef = useRef<number>(0);
@@ -71,7 +71,7 @@ export default function Index() {
           setFeatured(data.data);
         }
       } catch (err) {
-        console.error('Failed to fetch featured products:', err);
+        console.error('Gagal mengambil produk unggulan:', err);
       } finally {
         setIsLoading(false);
       }
@@ -79,19 +79,19 @@ export default function Index() {
     fetchFeatured();
   }, []);
 
-  // Auto-scroll with requestAnimationFrame
+  // Gulir otomatis menggunakan requestAnimationFrame
   useEffect(() => {
     const el = scrollRef.current;
     if (!el || displayItems.length === 0) return;
 
     let lastTime = 0;
-    const SPEED = 0.1; // px per ms — same feel as 22s CSS animation
+    const SPEED = 0.1; // px per ms — kecepatan setara animasi CSS 22 detik
 
     const tick = (time: number) => {
       if (!isInteracting.current && el) {
         const dt = lastTime ? time - lastTime : 0;
         el.scrollLeft += SPEED * dt;
-        // Seamless snap: when we've scrolled past the first half
+        // Snap mulus: saat guliran melewati setengah lebar pertama
         const halfWidth = el.scrollWidth / 2;
         if (el.scrollLeft >= halfWidth) {
           el.scrollLeft -= halfWidth;
@@ -131,9 +131,9 @@ export default function Index() {
     <div className="min-h-screen">
       <Navigation />
 
-      {/* Hero Section */}
+      {/* Bagian Hero */}
       <section className="relative h-[600px] md:h-[800px] overflow-hidden bg-[#0a0a0a]">
-        {/* Background Video */}
+        {/* Video Latar Belakang */}
         <div className="absolute inset-0" style={{ backgroundImage: "url('/video_first_frame.jpg')", backgroundSize: 'cover', backgroundPosition: 'center' }}>
           <video
             autoPlay
@@ -146,7 +146,7 @@ export default function Index() {
           >
             <source src="/rajaampat3.mp4" type="video/mp4" />
           </video>
-          {/* Overlay to ensure text readability */}
+          {/* Lapisan gelap agar teks mudah terbaca */}
           <div className="absolute inset-0 bg-black/45" />
         </div>
 
@@ -198,7 +198,7 @@ export default function Index() {
         </div>
       </section>
 
-      {/* Featured Products Section */}
+      {/* Bagian Produk Unggulan */}
       <section className="py-16 md:py-24 px-4">
         <div className="max-w-7xl mx-auto">
           <motion.div
@@ -216,7 +216,7 @@ export default function Index() {
             </p>
           </motion.div>
 
-          {/* Infinite scroll ticker — auto-scrolls, user can swipe */}
+          {/* Ticker gulir tak terbatas — otomatis bergulir, bisa digeser pengguna */}
           <motion.div
             initial={{ opacity: 0, y: 50 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -241,7 +241,7 @@ export default function Index() {
                       draggable={false}
                     >
                       <div className="bg-white rounded-xl overflow-hidden border border-gray-100 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 h-full flex flex-col select-none">
-                        {/* Product Image */}
+                        {/* Gambar Produk */}
                         <div className="relative h-48 sm:h-56 md:h-64 overflow-hidden bg-gray-100">
                           <img
                             src={getResolvedSrc(product.image)}
@@ -254,20 +254,20 @@ export default function Index() {
                           </div>
                         </div>
 
-                        {/* Product Info */}
+                        {/* Info Produk */}
                         <div className="p-4 flex flex-col flex-grow">
                           <h3 className="text-sm sm:text-base font-semibold text-foreground mb-2 group-hover:text-primary transition-colors line-clamp-2 min-h-[2.5rem]">
                             {product.name}
                           </h3>
 
-                          {/* Rating */}
+                          {/* Penilaian */}
                           <div className="flex items-center gap-1 mb-3">
                             {[...Array(product.rating)].map((_, i) => (
                               <Star key={i} className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
                             ))}
                           </div>
 
-                          {/* Price */}
+                          {/* Harga */}
                           <div className="mt-auto">
                             <span className="text-lg font-bold text-primary block mb-3">
                               Rp {Number(product.price).toLocaleString('id-ID')}
@@ -302,7 +302,7 @@ export default function Index() {
         </div>
       </section>
 
-      {/* Papua Motif Gradient Banner */}
+      {/* Banner Motif Papua */}
       <section
         className="relative py-28 px-4 overflow-hidden"
         style={{
@@ -312,14 +312,14 @@ export default function Index() {
           backgroundRepeat: 'no-repeat',
         }}
       >
-        {/* Single unified dark overlay */}
+        {/* Lapisan gelap menyeluruh */}
         <div className="absolute inset-0 bg-black/70" />
-        {/* Smooth top fade — matches page background */}
+        {/* Efek pudar halus bagian atas — menyesuaikan warna latar halaman */}
         <div
           className="absolute inset-x-0 top-0 h-28"
           style={{ background: 'linear-gradient(to bottom, #faf8f5 0%, transparent 100%)' }}
         />
-        {/* Smooth bottom fade — matches page background */}
+        {/* Efek pudar halus bagian bawah — menyesuaikan warna latar halaman */}
         <div
           className="absolute inset-x-0 bottom-0 h-28"
           style={{ background: 'linear-gradient(to top, #faf8f5 0%, transparent 100%)' }}
@@ -351,11 +351,11 @@ export default function Index() {
         </motion.div>
       </section>
 
-      {/* About Papua Section */}
+      {/* Bagian Tentang Papua */}
       <section className="py-16 md:py-24 px-4 bg-[#faf8f5] border-t border-b border-[#e8d5c4]">
         <div className="max-w-6xl mx-auto">
 
-          {/* 2 Photos Side by Side */}
+          {/* 2 Foto Berdampingan */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-14">
             {[
               {
@@ -393,7 +393,7 @@ export default function Index() {
             ))}
           </div>
 
-          {/* Text Content - below photos */}
+          {/* Konten Teks - di bawah foto */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
             <motion.div
               initial={{ opacity: 0, x: -40 }}

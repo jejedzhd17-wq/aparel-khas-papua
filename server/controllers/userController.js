@@ -2,7 +2,7 @@ import pool from '../config/db.js';
 import bcrypt from 'bcrypt';
 
 // ─── GET /api/users (admin) ───────────────────────────────────────
-// Union both tables to list all users and admins in the dashboard
+// Gabungkan kedua tabel untuk menampilkan semua user dan admin di dashboard
 export const getAllUsers = async (req, res) => {
   try {
     const [users] = await pool.query(`
@@ -32,7 +32,7 @@ export const getUserById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Check users table first
+    // Cek tabel users terlebih dahulu
     const [users] = await pool.query(
       'SELECT id, name, email, \'user\' as role, address, phone, created_at as joinDate FROM users WHERE id = ?',
       [id]
@@ -46,7 +46,7 @@ export const getUserById = async (req, res) => {
       });
     }
 
-    // Check admins table next
+    // Cek tabel admins berikutnya
     const [admins] = await pool.query(
       'SELECT id, name, email, \'admin\' as role, NULL as address, NULL as phone, created_at as joinDate FROM admins WHERE id = ?',
       [id]
@@ -93,7 +93,7 @@ export const createUser = async (req, res) => {
       });
     }
 
-    // Check email uniqueness in both tables
+    // Periksa keunikan email di kedua tabel
     const [existingUser] = await pool.query('SELECT id FROM users WHERE email = ?', [email.toLowerCase()]);
     const [existingAdmin] = await pool.query('SELECT id FROM admins WHERE email = ?', [email.toLowerCase()]);
     if (existingUser.length > 0 || existingAdmin.length > 0) {
@@ -148,11 +148,11 @@ export const updateUser = async (req, res) => {
     const { id } = req.params;
     const { name, email, role, address, phone } = req.body;
 
-    // Check if user exists in users table
+    // Periksa apakah user ada di tabel users
     const [existingUser] = await pool.query('SELECT id FROM users WHERE id = ?', [id]);
     const isUser = existingUser.length > 0;
 
-    // Check if admin exists in admins table
+    // Periksa apakah admin ada di tabel admins
     const [existingAdmin] = await pool.query('SELECT id FROM admins WHERE id = ?', [id]);
     const isAdmin = existingAdmin.length > 0;
 
@@ -164,7 +164,7 @@ export const updateUser = async (req, res) => {
     }
 
     if (isUser) {
-      // Update in users table
+      // Update di tabel users
       const updateFields = [];
       const updateValues = [];
 
@@ -178,7 +178,7 @@ export const updateUser = async (req, res) => {
         await pool.query(`UPDATE users SET ${updateFields.join(', ')} WHERE id = ?`, updateValues);
       }
     } else {
-      // Update in admins table
+      // Update di tabel admins
       const updateFields = [];
       const updateValues = [];
 
@@ -191,7 +191,7 @@ export const updateUser = async (req, res) => {
       }
     }
 
-    // Fetch updated data
+    // Ambil data yang sudah diperbarui
     let updatedData;
     if (isUser) {
       const [rows] = await pool.query(
@@ -227,7 +227,7 @@ export const deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Check users table
+    // Cek tabel users
     const [existingUser] = await pool.query('SELECT id FROM users WHERE id = ?', [id]);
     if (existingUser.length > 0) {
       await pool.query('DELETE FROM users WHERE id = ?', [id]);
@@ -237,10 +237,10 @@ export const deleteUser = async (req, res) => {
       });
     }
 
-    // Check admins table
+    // Cek tabel admins
     const [existingAdmin] = await pool.query('SELECT id FROM admins WHERE id = ?', [id]);
     if (existingAdmin.length > 0) {
-      // Prevent deleting self if current user is admin and targets their own ID
+      // Cegah menghapus diri sendiri jika pengguna adalah admin yang menarget ID-nya sendiri
       if (parseInt(id) === req.user.id && req.user.role === 'admin') {
         return res.status(400).json({
           success: false,
