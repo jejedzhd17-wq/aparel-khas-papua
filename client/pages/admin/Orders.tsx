@@ -99,12 +99,12 @@ export default function AdminOrders() {
   const [isSubmittingResi, setIsSubmittingResi] = useState(false);
 
   useEffect(() => {
-    const savedAdmin = localStorage.getItem('noken-admin');
-    if (!savedAdmin) { navigate('/login'); return; }
+    const savedAdmin = sessionStorage.getItem('noken-admin');
+    if (!savedAdmin) { navigate('/admin/login'); return; }
     loadOrders();
   }, [navigate]);
 
-  const getToken = () => localStorage.getItem('noken-admin-token');
+  const getToken = () => sessionStorage.getItem('noken-admin-token');
 
   const loadOrders = async () => {
     setIsLoading(true);

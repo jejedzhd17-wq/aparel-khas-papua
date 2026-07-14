@@ -22,13 +22,13 @@ export default function AdminCategories() {
   const [formData, setFormData] = useState({ name: '', description: '' });
 
   const getAdminToken = () => {
-    return localStorage.getItem('noken-admin-token');
+    return sessionStorage.getItem('noken-admin-token');
   };
 
   useEffect(() => {
-    const savedAdmin = localStorage.getItem('noken-admin');
+    const savedAdmin = sessionStorage.getItem('noken-admin');
     if (!savedAdmin) {
-      navigate('/login');
+      navigate('/admin/login');
       return;
     }
     loadCategories();

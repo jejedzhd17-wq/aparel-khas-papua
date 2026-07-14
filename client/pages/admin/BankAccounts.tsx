@@ -35,11 +35,11 @@ export default function AdminBankAccounts() {
   const [isSaving, setIsSaving] = useState(false);
 
   const getAdminToken = () => {
-    return localStorage.getItem('noken-admin-token');
+    return sessionStorage.getItem('noken-admin-token');
   };
 
   useEffect(() => {
-    const savedAdmin = localStorage.getItem('noken-admin');
+    const savedAdmin = sessionStorage.getItem('noken-admin');
     if (!savedAdmin) { navigate('/admin/login'); return; }
     loadAccounts();
   }, [navigate]);

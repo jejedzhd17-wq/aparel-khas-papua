@@ -67,14 +67,14 @@ export default function AdminDashboard() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const savedAdmin = localStorage.getItem('noken-admin');
-    if (!savedAdmin) { navigate('/login'); return; }
+    const savedAdmin = sessionStorage.getItem('noken-admin');
+    if (!savedAdmin) { navigate('/admin/login'); return; }
     loadDashboardData();
   }, [navigate]);
 
   const loadDashboardData = async () => {
     setIsLoading(true);
-    const token = localStorage.getItem('noken-admin-token');
+    const token = sessionStorage.getItem('noken-admin-token');
     try {
       const res = await fetch('/api/admin/dashboard', {
         headers: { 'Authorization': `Bearer ${token}` },
@@ -122,7 +122,7 @@ export default function AdminDashboard() {
         setChartData(ordersTrend || []);
       } else {
         toast.error(data.message || 'Gagal memuat data dashboard');
-        if (res.status === 401 || res.status === 403) navigate('/login');
+        if (res.status === 401 || res.status === 403) navigate('/admin/login');
       }
     } catch {
       toast.error('Gagal terhubung ke server');

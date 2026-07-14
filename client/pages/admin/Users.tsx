@@ -32,12 +32,12 @@ export default function AdminUsers() {
     phone: '',
   });
 
-  const getToken = () => localStorage.getItem('noken-admin-token');
+  const getToken = () => sessionStorage.getItem('noken-admin-token');
 
   useEffect(() => {
-    const savedAdmin = localStorage.getItem('noken-admin');
+    const savedAdmin = sessionStorage.getItem('noken-admin');
     if (!savedAdmin) {
-      navigate('/login');
+      navigate('/admin/login');
       return;
     }
     loadUsers();

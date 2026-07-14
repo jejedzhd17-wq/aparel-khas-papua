@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
@@ -10,6 +10,14 @@ export default function AdminLogin() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Jika sudah login sebagai admin, redirect ke dashboard
+  useEffect(() => {
+    const savedAdmin = sessionStorage.getItem('noken-admin');
+    if (savedAdmin) {
+      navigate('/admin/dashboard', { replace: true });
+    }
+  }, [navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,8 +36,8 @@ export default function AdminLogin() {
       const data = await response.json();
 
       if (data.success) {
-        localStorage.setItem('noken-admin-token', data.data.token);
-        localStorage.setItem('noken-admin', JSON.stringify(data.data.user));
+        sessionStorage.setItem('noken-admin-token', data.data.token);
+        sessionStorage.setItem('noken-admin', JSON.stringify(data.data.user));
         toast.success('Login admin berhasil!');
         setTimeout(() => {
           navigate('/admin/dashboard');
@@ -119,7 +127,7 @@ export default function AdminLogin() {
           </button>
         </form>
 
-        {/* Kotak Akun Demo */}
+        {/* Demo Credentials Box */}
         <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
           <p className="text-xs font-semibold text-blue-900 mb-3">Demo Credentials:</p>
           <div className="space-y-2 text-xs text-blue-800">
@@ -132,7 +140,7 @@ export default function AdminLogin() {
           </div>
         </div>
 
-        {/* Kembali ke Toko */}
+        {/* Back to Store */}
         <div className="text-center mt-6">
           <a href="/" className="text-primary hover:underline text-sm font-semibold">
             ← Kembali ke Store

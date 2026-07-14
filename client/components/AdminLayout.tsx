@@ -41,9 +41,9 @@ export default function AdminLayout({ children, title, description }: AdminLayou
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem('noken-admin');
-    localStorage.removeItem('noken-admin-token');
-    navigate('/login');
+    sessionStorage.removeItem('noken-admin');
+    sessionStorage.removeItem('noken-admin-token');
+    navigate('/admin/login');
   };
 
   const isActive = (path: string) => location.pathname === path;

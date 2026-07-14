@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Navigation from '@/components/Navigation';
 import { Eye, EyeOff } from 'lucide-react';
@@ -11,7 +11,19 @@ export default function Login() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // Jika sudah login, redirect sesuai role
+  useEffect(() => {
+    const savedToken = localStorage.getItem('noken-token');
+    const savedAdmin = sessionStorage.getItem('noken-admin');
+    if (savedAdmin) {
+      navigate('/admin/dashboard', { replace: true });
+    } else if (savedToken) {
+      navigate('/', { replace: true });
+    }
+  }, [navigate]);
+
   const handleLogin = async (e: React.FormEvent) => {
+
     e.preventDefault();
     setError('');
     setLoading(true);
@@ -42,8 +54,8 @@ export default function Login() {
 
         if (user.role === 'admin') {
           // Simpan token admin & user admin
-          localStorage.setItem('noken-admin-token', token);
-          localStorage.setItem('noken-admin', JSON.stringify(user));
+          sessionStorage.setItem('noken-admin-token', token);
+          sessionStorage.setItem('noken-admin', JSON.stringify(user));
           setLoading(false);
           navigate('/admin/orders');
         } else {

@@ -16,13 +16,33 @@ export default function Navigation() {
   useTheme();
   const { items: wishlistItems } = useWishlist();
   const [user, setUser] = useState<User | null>(null);
+  const [admin, setAdmin] = useState<User | null>(null);
   const location = useLocation();
 
   useEffect(() => {
-    const savedUser = localStorage.getItem('noken-user');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-    }
+    const loadUser = () => {
+      const savedUser = localStorage.getItem('noken-user');
+      if (savedUser) {
+        setUser(JSON.parse(savedUser));
+      } else {
+        setUser(null);
+      }
+      const savedAdmin = sessionStorage.getItem('noken-admin');
+      if (savedAdmin) {
+        setAdmin(JSON.parse(savedAdmin));
+      } else {
+        setAdmin(null);
+      }
+    };
+
+    loadUser();
+
+    window.addEventListener('noken-login', loadUser);
+    window.addEventListener('storage', loadUser);
+    return () => {
+      window.removeEventListener('noken-login', loadUser);
+      window.removeEventListener('storage', loadUser);
+    };
   }, []);
 
   const cartCount = items.reduce((sum, item) => sum + item.quantity, 0);
@@ -31,11 +51,15 @@ export default function Navigation() {
   const toggleMenu = () => setIsOpen(!isOpen);
 
   const handleLogout = () => {
+    const isAdmin = !!admin;
     localStorage.removeItem('noken-user');
     localStorage.removeItem('noken-token');
+    sessionStorage.removeItem('noken-admin');
+    sessionStorage.removeItem('noken-admin-token');
     setUser(null);
+    setAdmin(null);
     setIsOpen(false);
-    window.location.href = '/';
+    window.location.href = isAdmin ? '/admin/login' : '/';
   };
 
   const navLinks = [
@@ -61,7 +85,7 @@ export default function Navigation() {
             </div>
           </Link>
 
-          {/* Menu Desktop */}
+          {/* Desktop Menu */}
           <div className="hidden md:flex items-center gap-8">
             {navLinks.map((link) => {
               const isActive = location.pathname === link.href;
@@ -78,8 +102,32 @@ export default function Navigation() {
               );
             })}
 
-            {/* Menu Pengguna */}
-            {user ? (
+            {/* User Menu */}
+            {admin ? (
+              <div className="flex items-center gap-3 pl-8 border-l border-gray-200">
+                <div className="w-8 h-8 bg-secondary rounded-full flex items-center justify-center text-white font-bold">
+                  {admin.name.charAt(0).toUpperCase()}
+                </div>
+                <div className="text-sm">
+                  <p className="font-semibold text-foreground">{admin.name} (Admin)</p>
+                  <div className="flex items-center gap-2">
+                    <Link
+                      to="/admin/orders"
+                      className="text-xs text-primary hover:underline transition-colors font-medium"
+                    >
+                      Panel Admin
+                    </Link>
+                    <span className="text-xs text-gray-300">|</span>
+                    <button
+                      onClick={handleLogout}
+                      className="text-xs text-muted-foreground hover:text-red-600 transition-colors"
+                    >
+                      Keluar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : user ? (
               <div className="flex items-center gap-3 pl-8 border-l border-gray-200">
                 <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white font-bold">
                   {user.name.charAt(0).toUpperCase()}
@@ -121,7 +169,7 @@ export default function Navigation() {
             )}
           </div>
 
-          {/* Tombol aksi di sebelah kanan */}
+          {/* Right side actions */}
           <div className="flex items-center gap-4">
 
             <Link
@@ -149,7 +197,7 @@ export default function Navigation() {
               )}
             </Link>
 
-            {/* Tombol menu mobile */}
+            {/* Mobile menu button */}
             <button
               onClick={toggleMenu}
               className="md:hidden p-2 text-foreground hover:text-primary transition-colors"
@@ -160,7 +208,7 @@ export default function Navigation() {
           </div>
         </div>
 
-        {/* Menu Mobile */}
+        {/* Mobile Menu */}
         {isOpen && (
           <div className="md:hidden pb-4 border-t border-gray-200">
             {navLinks.map((link) => {
@@ -179,9 +227,29 @@ export default function Navigation() {
               );
             })}
 
-            {/* Menu Pengguna Mobile */}
+            {/* Mobile User Menu */}
             <div className="border-t border-gray-200 mt-2 pt-2">
-              {user ? (
+              {admin ? (
+                <>
+                  <div className="px-4 py-3 bg-gray-50">
+                    <p className="font-semibold text-foreground text-sm">{admin.name} (Admin)</p>
+                    <p className="text-xs text-muted-foreground">{admin.email}</p>
+                  </div>
+                  <Link
+                    to="/admin/orders"
+                    className="block px-4 py-2 text-primary hover:bg-gray-50 font-medium text-sm"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Panel Admin
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="w-full text-left px-4 py-2 text-red-600 hover:bg-gray-50 font-medium text-sm"
+                  >
+                    Keluar
+                  </button>
+                </>
+              ) : user ? (
                 <>
                   <div className="px-4 py-3 bg-gray-50">
                     <p className="font-semibold text-foreground text-sm">{user.name}</p>

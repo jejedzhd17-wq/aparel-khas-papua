@@ -79,16 +79,16 @@ export default function AdminProducts() {
   });
 
   useEffect(() => {
-    const savedAdmin = localStorage.getItem('noken-admin');
+    const savedAdmin = sessionStorage.getItem('noken-admin');
     if (!savedAdmin) {
-      navigate('/login');
+      navigate('/admin/login');
       return;
     }
     loadProducts();
   }, [navigate]);
 
   const getAuthHeader = () => {
-    const token = localStorage.getItem('noken-admin-token');
+    const token = sessionStorage.getItem('noken-admin-token');
     return token ? { Authorization: `Bearer ${token}` } : {};
   };
 
