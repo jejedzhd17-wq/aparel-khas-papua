@@ -54,6 +54,12 @@ export default function Navigation() {
     const isAdmin = !!admin;
     localStorage.removeItem('noken-user');
     localStorage.removeItem('noken-token');
+    localStorage.removeItem('noken-checkout-form');
+    localStorage.removeItem('noken-checkout-payment');
+    localStorage.removeItem('noken-checkout-bank');
+    localStorage.removeItem('noken-checkout-ewallet');
+    localStorage.removeItem('noken-checkout-customcity');
+    localStorage.removeItem('noken-pending-order');
     sessionStorage.removeItem('noken-admin');
     sessionStorage.removeItem('noken-admin-token');
     setUser(null);

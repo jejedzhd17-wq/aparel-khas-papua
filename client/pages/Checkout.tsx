@@ -90,31 +90,49 @@ export default function Checkout() {
     const savedBank = localStorage.getItem('noken-checkout-bank');
     const savedEwallet = localStorage.getItem('noken-checkout-ewallet');
 
+    const savedUser = localStorage.getItem('noken-user');
+    let currentUser: any = null;
+    if (savedUser) {
+      try {
+        currentUser = JSON.parse(savedUser);
+      } catch {}
+    }
+
     if (savedForm) {
       try {
         const parsedForm = JSON.parse(savedForm);
-        setForm(parsedForm);
-        // Pulihkan customCity jika sebelumnya memilih 'Lainnya (Tulis Manual)'
-        const savedCustomCity = localStorage.getItem('noken-checkout-customcity');
-        if (parsedForm.city === 'Lainnya (Tulis Manual)' && savedCustomCity) {
-          setCustomCity(savedCustomCity);
-        }
-      } catch {}
-    } else {
-      // Fallback: isi dari data user jika belum ada form tersimpan
-      const savedUser = localStorage.getItem('noken-user');
-      if (savedUser) {
-        try {
-          const parsedUser = JSON.parse(savedUser);
+        // Jika user login ada, dan email di form berbeda dengan email user login, jangan gunakan savedForm
+        if (currentUser && parsedForm.email && parsedForm.email.toLowerCase() !== currentUser.email.toLowerCase()) {
           setForm(prev => ({
             ...prev,
-            fullName: parsedUser.name || '',
-            email: parsedUser.email || '',
-            phone: parsedUser.phone || '',
-            address: parsedUser.address || '',
+            fullName: currentUser.name || currentUser.nama || '',
+            email: currentUser.email || '',
+            phone: currentUser.phone || currentUser.no_hp || '',
+            address: currentUser.address || currentUser.alamat || '',
+            city: '',
+            province: '',
+            postalCode: '',
           }));
-        } catch {}
-      }
+          localStorage.removeItem('noken-checkout-form');
+          localStorage.removeItem('noken-checkout-customcity');
+        } else {
+          setForm(parsedForm);
+          // Pulihkan customCity jika sebelumnya memilih 'Lainnya (Tulis Manual)'
+          const savedCustomCity = localStorage.getItem('noken-checkout-customcity');
+          if (parsedForm.city === 'Lainnya (Tulis Manual)' && savedCustomCity) {
+            setCustomCity(savedCustomCity);
+          }
+        }
+      } catch {}
+    } else if (currentUser) {
+      // Fallback: isi dari data user jika belum ada form tersimpan
+      setForm(prev => ({
+        ...prev,
+        fullName: currentUser.name || currentUser.nama || '',
+        email: currentUser.email || '',
+        phone: currentUser.phone || currentUser.no_hp || '',
+        address: currentUser.address || currentUser.alamat || '',
+      }));
     }
 
     if (savedPayment) setPaymentMethod(savedPayment as PaymentMethod);
