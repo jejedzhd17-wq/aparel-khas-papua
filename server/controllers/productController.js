@@ -1,4 +1,5 @@
 import pool from '../config/db.js';
+import fs from 'fs';
 
 // Helper: format produk dari skema Indonesia ke format frontend
 const formatProduct = (p, image = null) => ({
@@ -163,7 +164,17 @@ export const createProduct = async (req, res) => {
     let catId = category_id ? parseInt(category_id) : null;
 
     let imageUrl = image || null;
-    if (req.file) imageUrl = `/uploads/${req.file.filename}`;
+    if (req.file) {
+      try {
+        const fileBuffer = fs.readFileSync(req.file.path);
+        const base64Image = fileBuffer.toString('base64');
+        imageUrl = `data:${req.file.mimetype};base64,${base64Image}`;
+        // Hapus file temporary di disk setelah dikonversi ke base64
+        fs.unlinkSync(req.file.path);
+      } catch (err) {
+        console.error('Failed to convert uploaded image to base64:', err);
+      }
+    }
 
     const [result] = await pool.query(
       'INSERT INTO products (nama_produk, harga, stok, deskripsi, kategori_id, gambar) VALUES (?, ?, ?, ?, ?, ?)',
@@ -204,8 +215,19 @@ export const updateProduct = async (req, res) => {
     if (category_id !== undefined) { updateFields.push('kategori_id = ?');   updateValues.push(category_id ? parseInt(category_id) : null); }
 
     let imageUrl = null;
-    if (req.file) imageUrl = `/uploads/${req.file.filename}`;
-    else if (image !== undefined) imageUrl = image;
+    if (req.file) {
+      try {
+        const fileBuffer = fs.readFileSync(req.file.path);
+        const base64Image = fileBuffer.toString('base64');
+        imageUrl = `data:${req.file.mimetype};base64,${base64Image}`;
+        // Hapus file temporary di disk setelah dikonversi ke base64
+        fs.unlinkSync(req.file.path);
+      } catch (err) {
+        console.error('Failed to convert updated image to base64:', err);
+      }
+    } else if (image !== undefined) {
+      imageUrl = image;
+    }
 
     if (imageUrl !== null) {
       updateFields.push('gambar = ?');
