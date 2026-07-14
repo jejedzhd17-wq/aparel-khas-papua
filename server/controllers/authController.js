@@ -90,20 +90,40 @@ export const login = async (req, res) => {
       });
     }
 
-    // Cari user di tabel users
-    const [users] = await pool.query(
+    // 1. Cari user di tabel users
+    let [users] = await pool.query(
       'SELECT id, nama as name, email, password, role, alamat as address, no_hp as phone FROM users WHERE email = ?',
       [email.toLowerCase()]
     );
 
-    if (users.length === 0) {
+    let user;
+    let isUserAdmin = false;
+
+    if (users.length > 0) {
+      user = users[0];
+    } else {
+      // 2. Jika tidak ada di tabel users, coba cari di tabel admins
+      const [admins] = await pool.query(
+        'SELECT id, nama as name, email, password FROM admins WHERE email = ?',
+        [email.toLowerCase()]
+      );
+      if (admins.length > 0) {
+        user = {
+          ...admins[0],
+          role: 'admin',
+          address: null,
+          phone: null
+        };
+        isUserAdmin = true;
+      }
+    }
+
+    if (!user) {
       return res.status(401).json({
         success: false,
         message: 'Email tidak terdaftar. Silakan daftar terlebih dahulu.',
       });
     }
-
-    const user = users[0];
 
     // Verifikasi password
     let isPasswordValid = false;
@@ -120,7 +140,7 @@ export const login = async (req, res) => {
       });
     }
 
-    const token = generateToken({ id: user.id, email: user.email, role: 'user' });
+    const token = generateToken({ id: user.id, email: user.email, role: isUserAdmin ? 'admin' : 'user' });
 
     return res.status(200).json({
       success: true,
@@ -131,7 +151,7 @@ export const login = async (req, res) => {
           id: user.id,
           name: user.name,
           email: user.email,
-          role: 'user',
+          role: isUserAdmin ? 'admin' : 'user',
           address: user.address,
           phone: user.phone,
         },
