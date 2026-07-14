@@ -77,6 +77,8 @@ export default function AdminProducts() {
     image: '',
     description: '',
   });
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string>('');
 
   useEffect(() => {
     const savedAdmin = sessionStorage.getItem('noken-admin');
@@ -126,6 +128,8 @@ export default function AdminProducts() {
       image: product.image,
       description: product.description || '',
     });
+    setPreviewUrl(product.image);
+    setImageFile(null);
     setShowModal(true);
   };
 
@@ -160,18 +164,29 @@ export default function AdminProducts() {
     try {
       const method = selectedProduct ? 'PUT' : 'POST';
       const endpoint = selectedProduct ? `/api/products/${selectedProduct.id}` : '/api/products';
-      const body = {
-        name: formData.name,
-        category: formData.category,
-        price: parseInt(formData.price),
-        stock: parseInt(formData.stock),
-        image: formData.image,
-        description: formData.description,
-      };
+      
+      const payload = new FormData();
+      payload.append('name', formData.name);
+      payload.append('category', formData.category);
+      payload.append('price', formData.price);
+      payload.append('stock', formData.stock);
+      payload.append('description', formData.description);
+
+      let categoryId = '1';
+      if (formData.category === 'Tas Noken') categoryId = '2';
+      else if (formData.category === 'Aksesoris') categoryId = '3';
+      payload.append('category_id', categoryId);
+
+      if (imageFile) {
+        payload.append('image', imageFile);
+      } else {
+        payload.append('image', formData.image);
+      }
+
       const res = await fetch(endpoint, {
         method,
-        headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
-        body: JSON.stringify(body),
+        headers: getAuthHeader(),
+        body: payload,
       });
       const data = await res.json();
       if (data.success) {
@@ -189,6 +204,8 @@ export default function AdminProducts() {
 
   const resetForm = () => {
     setFormData({ name: '', category: 'Pakaian', price: '', stock: '', image: '', description: '' });
+    setImageFile(null);
+    setPreviewUrl('');
     setSelectedProduct(null);
   };
 
@@ -411,25 +428,53 @@ export default function AdminProducts() {
             </div>
 
             <div className="sm:col-span-2">
-              <label className="block text-xs font-semibold text-gray-700 uppercase mb-1">URL Gambar</label>
-              <input
-                type="text"
-                value={formData.image}
-                onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary text-sm"
-                placeholder="https://images.unsplash.com/... atau URL gambar lainnya"
-              />
-              <p className="text-[11px] text-gray-400 mt-1">Tempel URL gambar dari internet (harus dimulai dengan https://)</p>
+              <label className="block text-xs font-semibold text-gray-700 uppercase mb-1">Gambar Produk</label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Upload File */}
+                <div className="border border-gray-200 rounded-lg p-3 bg-gray-50/50 flex flex-col justify-center">
+                  <span className="block text-xs font-medium text-gray-500 mb-2">Upload File Foto</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setImageFile(file);
+                        const url = URL.createObjectURL(file);
+                        setPreviewUrl(url);
+                        setFormData(prev => ({ ...prev, image: '' }));
+                      }
+                    }}
+                    className="w-full text-xs text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 cursor-pointer"
+                  />
+                </div>
+
+                {/* URL Gambar */}
+                <div className="border border-gray-200 rounded-lg p-3 bg-gray-50/50 flex flex-col justify-center">
+                  <span className="block text-xs font-medium text-gray-500 mb-1">Atau Gunakan Link Foto</span>
+                  <input
+                    type="text"
+                    value={formData.image}
+                    onChange={(e) => {
+                      setFormData({ ...formData, image: e.target.value });
+                      setImageFile(null);
+                      setPreviewUrl(e.target.value);
+                    }}
+                    className="w-full px-3 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary text-xs"
+                    placeholder="https://images.unsplash.com/..."
+                  />
+                </div>
+              </div>
             </div>
 
             {/* Image Preview — Full size, clear feedback */}
-            {formData.image && (
+            {previewUrl && (
               <div className="sm:col-span-2">
                 <p className="text-xs text-gray-500 font-semibold uppercase mb-2">Preview Gambar:</p>
                 <div className="relative w-full max-w-xs h-48 rounded-xl overflow-hidden border-2 border-dashed border-gray-200 bg-gray-50 flex items-center justify-center">
                   <img
-                    key={formData.image}
-                    src={formData.image.startsWith('http') ? formData.image : formData.image.startsWith('/') ? formData.image : `/uploads/${formData.image}`}
+                    key={previewUrl}
+                    src={previewUrl.startsWith('http') || previewUrl.startsWith('blob') ? previewUrl : previewUrl.startsWith('/') ? previewUrl : `/uploads/${previewUrl}`}
                     alt="preview"
                     className="w-full h-full object-cover rounded-xl"
                     onLoad={(e) => { (e.target as HTMLImageElement).style.opacity = '1'; }}
@@ -440,7 +485,7 @@ export default function AdminProducts() {
                       if (parent && !parent.querySelector('.img-error-msg')) {
                         const msg = document.createElement('div');
                         msg.className = 'img-error-msg flex flex-col items-center justify-center gap-2 text-center p-4';
-                        msg.innerHTML = '<span style="font-size:2rem">⚠️</span><p class="text-xs text-red-500 font-semibold">URL gambar tidak valid atau tidak dapat dimuat.<br/>Pastikan URL benar dan dapat diakses.</p>';
+                        msg.innerHTML = '<span style="font-size:2rem">⚠️</span><p class="text-xs text-red-500 font-semibold">Gambar tidak valid atau tidak dapat dimuat.</p>';
                         parent.appendChild(msg);
                       }
                     }}
