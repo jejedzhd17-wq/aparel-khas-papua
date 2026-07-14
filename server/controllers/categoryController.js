@@ -4,18 +4,26 @@ import pool from '../config/db.js';
 export const getAllCategories = async (req, res) => {
   try {
     const [categories] = await pool.query(`
-      SELECT c.id, c.name, c.slug, c.description, c.icon,
+      SELECT c.id, c.nama_kategori as name, c.nama_kategori as slug,
              COUNT(p.id) as productCount
       FROM categories c
-      LEFT JOIN products p ON p.category_id = c.id
-      GROUP BY c.id, c.name, c.slug, c.description, c.icon
-      ORDER BY c.name ASC
+      LEFT JOIN products p ON p.kategori_id = c.id
+      GROUP BY c.id, c.nama_kategori
+      ORDER BY c.nama_kategori ASC
     `);
+
+    // Format slug dari nama_kategori
+    const formatted = categories.map(c => ({
+      ...c,
+      slug: c.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
+      description: '',
+      icon: '🛍️',
+    }));
 
     return res.status(200).json({
       success: true,
       message: 'Daftar kategori berhasil diambil',
-      data: categories,
+      data: formatted,
     });
   } catch (error) {
     console.error('GetAllCategories error:', error);
@@ -28,35 +36,58 @@ export const getCategoryBySlug = async (req, res) => {
   try {
     const { slug } = req.params;
 
-    const [categories] = await pool.query(
-      'SELECT id, name, slug, description, icon FROM categories WHERE slug = ?',
-      [slug]
-    );
+    // Decode slug ke nama (ganti - dengan spasi)
+    const nameFromSlug = slug.replace(/-/g, ' ');
+
+    // Cari by id jika slug adalah angka, atau by nama_kategori
+    let categories;
+    if (!isNaN(slug)) {
+      [categories] = await pool.query('SELECT id, nama_kategori FROM categories WHERE id = ?', [slug]);
+    } else {
+      [categories] = await pool.query(
+        'SELECT id, nama_kategori FROM categories WHERE LOWER(nama_kategori) LIKE ? OR LOWER(nama_kategori) = ?',
+        [`%${nameFromSlug.toLowerCase()}%`, nameFromSlug.toLowerCase()]
+      );
+    }
 
     if (categories.length === 0) {
       return res.status(404).json({ success: false, message: 'Kategori tidak ditemukan' });
     }
 
     const category = categories[0];
+    const categorySlug = category.nama_kategori.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
 
     const [products] = await pool.query(`
-      SELECT p.id, p.name, p.price, p.stock, p.description,
-             c.name as category, c.slug as categorySlug,
-             COALESCE((SELECT image_url FROM product_images WHERE product_id = p.id AND is_primary = 1 LIMIT 1),
-                      (SELECT image_url FROM product_images WHERE product_id = p.id LIMIT 1)) as image,
+      SELECT p.id, p.nama_produk as name, p.harga as price, p.stok as stock, p.deskripsi as description,
+             p.gambar as image, c.nama_kategori as category,
              IFNULL((SELECT AVG(rating) FROM reviews WHERE product_id = p.id), 0) as rating,
              (SELECT COUNT(*) FROM reviews WHERE product_id = p.id) as reviewCount,
-             p.in_stock, p.sizes
+             p.stok as in_stock
       FROM products p
-      LEFT JOIN categories c ON p.category_id = c.id
-      WHERE p.category_id = ?
+      LEFT JOIN categories c ON p.kategori_id = c.id
+      WHERE p.kategori_id = ?
       ORDER BY p.created_at DESC
     `, [category.id]);
+
+    const productsFormatted = products.map(p => ({
+      ...p,
+      price: Number(p.price),
+      in_stock: p.in_stock > 0,
+      categorySlug,
+      sizes: ['S', 'M', 'L', 'XL', 'XXL'],
+    }));
 
     return res.status(200).json({
       success: true,
       message: 'Data kategori berhasil diambil',
-      data: { ...category, products },
+      data: {
+        id: category.id,
+        name: category.nama_kategori,
+        slug: categorySlug,
+        description: '',
+        icon: '🛍️',
+        products: productsFormatted,
+      },
     });
   } catch (error) {
     console.error('GetCategoryBySlug error:', error);
@@ -67,28 +98,27 @@ export const getCategoryBySlug = async (req, res) => {
 // ─── POST /api/categories (admin) ────────────────────────────────
 export const createCategory = async (req, res) => {
   try {
-    const { name, description, icon } = req.body;
+    const { name } = req.body;
 
     if (!name) {
       return res.status(400).json({ success: false, message: 'Nama kategori harus diisi' });
     }
 
-    const slug = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-
-    const [existing] = await pool.query('SELECT id FROM categories WHERE LOWER(name) = ?', [name.toLowerCase()]);
+    const [existing] = await pool.query('SELECT id FROM categories WHERE LOWER(nama_kategori) = ?', [name.toLowerCase()]);
     if (existing.length > 0) {
       return res.status(409).json({ success: false, message: 'Kategori dengan nama ini sudah ada' });
     }
 
     const [result] = await pool.query(
-      'INSERT INTO categories (name, slug, description, icon) VALUES (?, ?, ?, ?)',
-      [name, slug, description || '', icon || '🛍️']
+      'INSERT INTO categories (nama_kategori) VALUES (?)',
+      [name]
     );
 
+    const slug = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
     return res.status(201).json({
       success: true,
       message: 'Kategori berhasil dibuat',
-      data: { id: result.insertId, name, slug, description: description || '', icon: icon || '🛍️' },
+      data: { id: result.insertId, name, slug, description: '', icon: '🛍️' },
     });
   } catch (error) {
     console.error('CreateCategory error:', error);
@@ -100,34 +130,25 @@ export const createCategory = async (req, res) => {
 export const updateCategory = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, description, icon } = req.body;
+    const { name } = req.body;
 
     const [existing] = await pool.query('SELECT id FROM categories WHERE id = ?', [id]);
     if (existing.length === 0) {
       return res.status(404).json({ success: false, message: 'Kategori tidak ditemukan' });
     }
 
-    const updateFields = [];
-    const updateValues = [];
-
-    if (name) {
-      const slug = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-      updateFields.push('name = ?', 'slug = ?');
-      updateValues.push(name, slug);
-    }
-    if (description !== undefined) { updateFields.push('description = ?'); updateValues.push(description); }
-    if (icon !== undefined) { updateFields.push('icon = ?'); updateValues.push(icon); }
-
-    if (updateFields.length === 0) {
-      return res.status(400).json({ success: false, message: 'Tidak ada data yang diupdate' });
+    if (!name) {
+      return res.status(400).json({ success: false, message: 'Nama kategori harus diisi' });
     }
 
-    updateValues.push(id);
-    await pool.query(`UPDATE categories SET ${updateFields.join(', ')} WHERE id = ?`, updateValues);
+    await pool.query('UPDATE categories SET nama_kategori = ? WHERE id = ?', [name, id]);
 
-    const [updated] = await pool.query('SELECT id, name, slug, description, icon FROM categories WHERE id = ?', [id]);
-
-    return res.status(200).json({ success: true, message: 'Kategori berhasil diupdate', data: updated[0] });
+    const slug = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    return res.status(200).json({
+      success: true,
+      message: 'Kategori berhasil diupdate',
+      data: { id: parseInt(id), name, slug, description: '', icon: '🛍️' },
+    });
   } catch (error) {
     console.error('UpdateCategory error:', error);
     return res.status(500).json({ success: false, message: 'Terjadi kesalahan server', error: error.message });
@@ -144,7 +165,7 @@ export const deleteCategory = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Kategori tidak ditemukan' });
     }
 
-    const [[{ count }]] = await pool.query('SELECT COUNT(*) as count FROM products WHERE category_id = ?', [id]);
+    const [[{ count }]] = await pool.query('SELECT COUNT(*) as count FROM products WHERE kategori_id = ?', [id]);
     if (count > 0) {
       return res.status(400).json({
         success: false,
