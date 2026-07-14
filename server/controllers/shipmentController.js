@@ -22,21 +22,39 @@ const generateTimeline = (shipment) => {
   ];
 };
 
+const mapStatusToFrontend = (dbStatus) => {
+  if (dbStatus === 'delivered' || dbStatus === 'Diterima' || dbStatus === 'selesai') return 'delivered';
+  if (dbStatus === 'shipped' || dbStatus === 'Dikirim' || dbStatus === 'dikirim') return 'shipped';
+  if (dbStatus === 'in_transit' || dbStatus === 'Dalam Perjalanan') return 'in_transit';
+  return dbStatus || 'pending';
+};
+
 // Helper: format shipment object
-const formatShipment = (s, items = []) => ({
-  id: s.id,
-  orderId:        s.order_id,
-  trackingNumber: s.tracking_number,
-  courier:        s.courier,
-  status:         s.status || 'pending',
-  shippingDate:   s.shipping_date,
-  estimatedDelivery: s.estimated_delivery || null,
-  address:        s.address   ? `${s.address}, ${s.city || ''}, ${s.province || ''}` : '-',
-  customerName:   s.full_name || 'Pelanggan',
-  total:          s.total ? parseFloat(s.total) : null,
-  items,
-  timeline: generateTimeline(s),
-});
+const formatShipment = (s, items = []) => {
+  const lines = (s.alamat_pengiriman || '').split('\n');
+  const customerName = lines[0] || 'Pelanggan';
+  const address = lines.slice(3).join('\n') || '-';
+
+  return {
+    id: s.id,
+    orderId:        s.order_id,
+    trackingNumber: s.resi || '',
+    courier:        s.kurir || '',
+    status:         mapStatusToFrontend(s.status_pengiriman),
+    shippingDate:   s.tanggal_kirim || null,
+    estimatedDelivery: null,
+    address,
+    customerName,
+    total:          s.total_harga ? parseFloat(s.total_harga) : null,
+    items,
+    timeline: generateTimeline({
+      courier: s.kurir,
+      tracking_number: s.resi,
+      status: mapStatusToFrontend(s.status_pengiriman),
+      shipping_date: s.tanggal_kirim
+    }),
+  };
+};
 
 // ─── GET /api/shipments (Shipment milik user) ─────────────────────
 export const getUserShipments = async (req, res) => {
@@ -44,12 +62,12 @@ export const getUserShipments = async (req, res) => {
     const userId = req.user.id;
 
     const [shipments] = await pool.query(
-      `SELECT s.id, s.order_id, s.courier, s.tracking_number, s.status, s.shipping_date, s.estimated_delivery,
-              o.full_name, o.address, o.city, o.province, o.total
+      `SELECT s.id, s.order_id, s.kurir, s.resi, s.status_pengiriman, s.tanggal_kirim,
+              o.alamat_pengiriman, o.total_harga
        FROM shipments s
        INNER JOIN orders o ON s.order_id = o.id
        WHERE o.user_id = ?
-       ORDER BY s.shipping_date DESC`,
+       ORDER BY s.tanggal_kirim DESC`,
       [userId]
     );
 
@@ -70,8 +88,8 @@ export const getShipmentById = async (req, res) => {
     const { id } = req.params;
 
     const [shipments] = await pool.query(
-      `SELECT s.id, s.order_id, s.courier, s.tracking_number, s.status, s.shipping_date, s.estimated_delivery,
-              o.full_name, o.address, o.city, o.province, o.total, o.user_id
+      `SELECT s.id, s.order_id, s.kurir, s.resi, s.status_pengiriman, s.tanggal_kirim,
+              o.alamat_pengiriman, o.total_harga, o.user_id
        FROM shipments s
        INNER JOIN orders o ON s.order_id = o.id
        WHERE s.id = ?`,
@@ -86,11 +104,19 @@ export const getShipmentById = async (req, res) => {
     }
 
     const [items] = await pool.query(
-      `SELECT oi.quantity, p.name FROM order_items oi LEFT JOIN products p ON oi.product_id = p.id WHERE oi.order_id = ?`,
+      `SELECT oi.jumlah as quantity, p.nama_produk as name 
+       FROM order_items oi 
+       LEFT JOIN products p ON oi.product_id = p.id 
+       WHERE oi.order_id = ?`,
       [s.order_id]
     );
 
-    return res.status(200).json({ success: true, message: 'Detail pengiriman berhasil diambil', data: formatShipment(s, items) });
+    const formattedItems = items.map(item => ({
+      name: item.name || 'Produk',
+      quantity: Number(item.quantity)
+    }));
+
+    return res.status(200).json({ success: true, message: 'Detail pengiriman berhasil diambil', data: formatShipment(s, formattedItems) });
   } catch (error) {
     console.error('GetShipmentById error:', error);
     return res.status(500).json({ success: false, message: 'Terjadi kesalahan server', error: error.message });
@@ -103,11 +129,11 @@ export const trackShipmentByResi = async (req, res) => {
     const { trackingNumber } = req.params;
 
     const [shipments] = await pool.query(
-      `SELECT s.id, s.order_id, s.courier, s.tracking_number, s.status, s.shipping_date, s.estimated_delivery,
-              o.full_name, o.address, o.city, o.province, o.total
+      `SELECT s.id, s.order_id, s.kurir, s.resi, s.status_pengiriman, s.tanggal_kirim,
+              o.alamat_pengiriman, o.total_harga
        FROM shipments s
        INNER JOIN orders o ON s.order_id = o.id
-       WHERE s.tracking_number = ?`,
+       WHERE s.resi = ?`,
       [trackingNumber]
     );
 
@@ -115,11 +141,19 @@ export const trackShipmentByResi = async (req, res) => {
 
     const s = shipments[0];
     const [items] = await pool.query(
-      `SELECT oi.quantity, p.name FROM order_items oi LEFT JOIN products p ON oi.product_id = p.id WHERE oi.order_id = ?`,
+      `SELECT oi.jumlah as quantity, p.nama_produk as name 
+       FROM order_items oi 
+       LEFT JOIN products p ON oi.product_id = p.id 
+       WHERE oi.order_id = ?`,
       [s.order_id]
     );
 
-    return res.status(200).json({ success: true, message: 'Pelacakan resi berhasil', data: formatShipment(s, items) });
+    const formattedItems = items.map(item => ({
+      name: item.name || 'Produk',
+      quantity: Number(item.quantity)
+    }));
+
+    return res.status(200).json({ success: true, message: 'Pelacakan resi berhasil', data: formatShipment(s, formattedItems) });
   } catch (error) {
     console.error('TrackShipmentByResi error:', error);
     return res.status(500).json({ success: false, message: 'Terjadi kesalahan server', error: error.message });
@@ -130,11 +164,11 @@ export const trackShipmentByResi = async (req, res) => {
 export const getAllShipmentsAdmin = async (req, res) => {
   try {
     const [shipments] = await pool.query(
-      `SELECT s.id, s.order_id, s.courier, s.tracking_number, s.status, s.shipping_date,
-              o.full_name, o.address, o.city, o.province
+      `SELECT s.id, s.order_id, s.kurir, s.resi, s.status_pengiriman, s.tanggal_kirim,
+              o.alamat_pengiriman
        FROM shipments s
        INNER JOIN orders o ON s.order_id = o.id
-       ORDER BY s.shipping_date DESC`
+       ORDER BY s.tanggal_kirim DESC`
     );
 
     return res.status(200).json({
@@ -172,19 +206,19 @@ export const createShipment = async (req, res) => {
     let insertId;
     if (existing.length > 0) {
       await connection.query(
-        "UPDATE shipments SET courier = ?, tracking_number = ?, status = 'shipped', shipping_date = NOW() WHERE order_id = ?",
+        "UPDATE shipments SET kurir = ?, resi = ?, status_pengiriman = 'shipped', tanggal_kirim = NOW() WHERE order_id = ?",
         [courier, trackingNumber, orderId]
       );
       insertId = existing[0].id;
     } else {
       const [result] = await connection.query(
-        "INSERT INTO shipments (order_id, courier, tracking_number, status, shipping_date) VALUES (?, ?, ?, 'shipped', NOW())",
+        "INSERT INTO shipments (order_id, kurir, resi, status_pengiriman, tanggal_kirim) VALUES (?, ?, ?, 'shipped', NOW())",
         [orderId, courier, trackingNumber]
       );
       insertId = result.insertId;
     }
 
-    await connection.query("UPDATE orders SET status = 'shipped' WHERE id = ?", [orderId]);
+    await connection.query("UPDATE orders SET status = 'dikirim' WHERE id = ?", [orderId]);
     await connection.commit();
 
     return res.status(201).json({
@@ -218,20 +252,26 @@ export const updateShipment = async (req, res) => {
 
     const { order_id } = shipments[0];
 
-    await connection.query(
-      `UPDATE shipments
-       SET courier = COALESCE(?, courier),
-           tracking_number = COALESCE(?, tracking_number),
-           status = COALESCE(?, status)
-       WHERE id = ?`,
-      [courier || null, trackingNumber || null, status || null, id]
-    );
+    const updateFields = [];
+    const updateValues = [];
+
+    if (courier)        { updateFields.push('kurir = ?');             updateValues.push(courier); }
+    if (trackingNumber) { updateFields.push('resi = ?');              updateValues.push(trackingNumber); }
+    if (status)         { updateFields.push('status_pengiriman = ?'); updateValues.push(status); }
+
+    if (updateFields.length > 0) {
+      updateValues.push(id);
+      await connection.query(
+        `UPDATE shipments SET ${updateFields.join(', ')} WHERE id = ?`,
+        updateValues
+      );
+    }
 
     // Sinkronkan status order
     if (status === 'delivered') {
-      await connection.query("UPDATE orders SET status = 'completed' WHERE id = ?", [order_id]);
+      await connection.query("UPDATE orders SET status = 'selesai' WHERE id = ?", [order_id]);
     } else if (['shipped', 'in_transit'].includes(status)) {
-      await connection.query("UPDATE orders SET status = 'shipped' WHERE id = ?", [order_id]);
+      await connection.query("UPDATE orders SET status = 'dikirim' WHERE id = ?", [order_id]);
     }
 
     await connection.commit();
