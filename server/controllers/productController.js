@@ -183,6 +183,18 @@ export const createProduct = async (req, res) => {
 
     const productId = result.insertId;
 
+    // Sinkronisasi ke product_images
+    if (imageUrl) {
+      try {
+        await pool.query(
+          'INSERT INTO product_images (product_id, image_url, is_primary) VALUES (?, ?, 1)',
+          [productId, imageUrl]
+        );
+      } catch (err) {
+        console.error('Failed to sync to product_images on create:', err);
+      }
+    }
+
     return res.status(201).json({
       success: true,
       message: 'Produk berhasil dibuat',
@@ -239,6 +251,19 @@ export const updateProduct = async (req, res) => {
       await pool.query(`UPDATE products SET ${updateFields.join(', ')} WHERE id = ?`, updateValues);
     }
 
+    // Sinkronisasi ke product_images jika gambar terupdate
+    if (imageUrl !== null) {
+      try {
+        await pool.query('DELETE FROM product_images WHERE product_id = ?', [id]);
+        await pool.query(
+          'INSERT INTO product_images (product_id, image_url, is_primary) VALUES (?, ?, 1)',
+          [id, imageUrl]
+        );
+      } catch (err) {
+        console.error('Failed to sync to product_images on update:', err);
+      }
+    }
+
     const [updatedRows] = await pool.query(`
       SELECT p.id, p.nama_produk, p.harga, p.stok, p.deskripsi, p.gambar,
              p.kategori_id, c.nama_kategori
@@ -260,6 +285,13 @@ export const deleteProduct = async (req, res) => {
     const [existing] = await pool.query('SELECT id FROM products WHERE id = ?', [id]);
     if (existing.length === 0) {
       return res.status(404).json({ success: false, message: 'Produk tidak ditemukan' });
+    }
+
+    // Hapus relasi dari product_images terlebih dahulu
+    try {
+      await pool.query('DELETE FROM product_images WHERE product_id = ?', [id]);
+    } catch (err) {
+      console.error('Failed to delete from product_images:', err);
     }
 
     await pool.query('DELETE FROM products WHERE id = ?', [id]);
