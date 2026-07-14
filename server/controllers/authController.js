@@ -46,7 +46,7 @@ export const register = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const [result] = await pool.query(
-      'INSERT INTO users (name, email, password, role, address, phone) VALUES (?, ?, ?, ?, ?, ?)',
+      'INSERT INTO users (nama, email, password, role, alamat, no_hp) VALUES (?, ?, ?, ?, ?, ?)',
       [name, email.toLowerCase(), hashedPassword, 'user', address || null, phone || null]
     );
 
@@ -92,7 +92,7 @@ export const login = async (req, res) => {
 
     // Cari user di tabel users
     const [users] = await pool.query(
-      'SELECT id, name, email, password, role, address, phone FROM users WHERE email = ?',
+      'SELECT id, nama as name, email, password, role, alamat as address, no_hp as phone FROM users WHERE email = ?',
       [email.toLowerCase()]
     );
 
@@ -161,7 +161,7 @@ export const adminLogin = async (req, res) => {
 
     // Cari admin dari tabel admins yang terpisah
     const [admins] = await pool.query(
-      "SELECT id, name, email, password FROM admins WHERE email = ?",
+      "SELECT id, nama as name, email, password FROM admins WHERE email = ?",
       [email.toLowerCase()]
     );
 
@@ -205,9 +205,9 @@ export const adminLogin = async (req, res) => {
 // ─── GET /api/auth/me ─────────────────────────────────────────────
 export const getMe = async (req, res) => {
   try {
-    let query = 'SELECT id, name, email, role, address, phone, created_at FROM users WHERE id = ?';
+    let query = 'SELECT id, nama as name, email, role, alamat as address, no_hp as phone, created_at FROM users WHERE id = ?';
     if (req.user.role === 'admin') {
-      query = 'SELECT id, name, email, created_at FROM admins WHERE id = ?';
+      query = 'SELECT id, nama as name, email, created_at FROM admins WHERE id = ?';
     }
 
     const [results] = await pool.query(query, [req.user.id]);

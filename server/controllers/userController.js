@@ -6,9 +6,9 @@ import bcrypt from 'bcrypt';
 export const getAllUsers = async (req, res) => {
   try {
     const [users] = await pool.query(`
-      SELECT id, name, email, 'user' as role, address, phone, created_at as joinDate FROM users
+      SELECT id, nama as name, email, 'user' as role, alamat as address, no_hp as phone, created_at as joinDate FROM users
       UNION ALL
-      SELECT id, name, email, 'admin' as role, NULL as address, NULL as phone, created_at as joinDate FROM admins
+      SELECT id, nama as name, email, 'admin' as role, NULL as address, NULL as phone, created_at as joinDate FROM admins
       ORDER BY joinDate DESC
     `);
 
@@ -34,7 +34,7 @@ export const getUserById = async (req, res) => {
 
     // Cek tabel users terlebih dahulu
     const [users] = await pool.query(
-      'SELECT id, name, email, \'user\' as role, address, phone, created_at as joinDate FROM users WHERE id = ?',
+      'SELECT id, nama as name, email, \'user\' as role, alamat as address, no_hp as phone, created_at as joinDate FROM users WHERE id = ?',
       [id]
     );
 
@@ -48,7 +48,7 @@ export const getUserById = async (req, res) => {
 
     // Cek tabel admins berikutnya
     const [admins] = await pool.query(
-      'SELECT id, name, email, \'admin\' as role, NULL as address, NULL as phone, created_at as joinDate FROM admins WHERE id = ?',
+      'SELECT id, nama as name, email, \'admin\' as role, NULL as address, NULL as phone, created_at as joinDate FROM admins WHERE id = ?',
       [id]
     );
 
@@ -108,13 +108,13 @@ export const createUser = async (req, res) => {
     let insertId;
     if (role === 'admin') {
       const [result] = await pool.query(
-        'INSERT INTO admins (name, email, password) VALUES (?, ?, ?)',
+        'INSERT INTO admins (nama, email, password) VALUES (?, ?, ?)',
         [name, email.toLowerCase(), hashedPassword]
       );
       insertId = result.insertId;
     } else {
       const [result] = await pool.query(
-        'INSERT INTO users (name, email, password, role, address, phone) VALUES (?, ?, ?, ?, ?, ?)',
+        'INSERT INTO users (nama, email, password, role, alamat, no_hp) VALUES (?, ?, ?, ?, ?, ?)',
         [name, email.toLowerCase(), hashedPassword, 'user', address || null, phone || null]
       );
       insertId = result.insertId;
@@ -146,7 +146,7 @@ export const createUser = async (req, res) => {
 export const updateUser = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, email, role, address, phone } = req.body;
+    const { name, email, address, phone } = req.body;
 
     // Periksa apakah user ada di tabel users
     const [existingUser] = await pool.query('SELECT id FROM users WHERE id = ?', [id]);
@@ -168,10 +168,10 @@ export const updateUser = async (req, res) => {
       const updateFields = [];
       const updateValues = [];
 
-      if (name)  { updateFields.push('name = ?');    updateValues.push(name); }
+      if (name)  { updateFields.push('nama = ?');    updateValues.push(name); }
       if (email) { updateFields.push('email = ?');   updateValues.push(email.toLowerCase()); }
-      if (address !== undefined) { updateFields.push('address = ?'); updateValues.push(address); }
-      if (phone  !== undefined)  { updateFields.push('phone = ?');   updateValues.push(phone); }
+      if (address !== undefined) { updateFields.push('alamat = ?');  updateValues.push(address); }
+      if (phone  !== undefined)  { updateFields.push('no_hp = ?');   updateValues.push(phone); }
 
       if (updateFields.length > 0) {
         updateValues.push(id);
@@ -182,7 +182,7 @@ export const updateUser = async (req, res) => {
       const updateFields = [];
       const updateValues = [];
 
-      if (name)  { updateFields.push('name = ?');    updateValues.push(name); }
+      if (name)  { updateFields.push('nama = ?');    updateValues.push(name); }
       if (email) { updateFields.push('email = ?');   updateValues.push(email.toLowerCase()); }
 
       if (updateFields.length > 0) {
@@ -195,13 +195,13 @@ export const updateUser = async (req, res) => {
     let updatedData;
     if (isUser) {
       const [rows] = await pool.query(
-        'SELECT id, name, email, \'user\' as role, address, phone, created_at as joinDate FROM users WHERE id = ?',
+        'SELECT id, nama as name, email, \'user\' as role, alamat as address, no_hp as phone, created_at as joinDate FROM users WHERE id = ?',
         [id]
       );
       updatedData = rows[0];
     } else {
       const [rows] = await pool.query(
-        'SELECT id, name, email, \'admin\' as role, NULL as address, NULL as phone, created_at as joinDate FROM admins WHERE id = ?',
+        'SELECT id, nama as name, email, \'admin\' as role, NULL as address, NULL as phone, created_at as joinDate FROM admins WHERE id = ?',
         [id]
       );
       updatedData = rows[0];

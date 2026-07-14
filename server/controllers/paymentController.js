@@ -9,19 +9,19 @@ export const createPayment = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Order ID dan payment method harus diisi' });
     }
 
-    const [orders] = await pool.query('SELECT id, total FROM orders WHERE id = ?', [orderId]);
+    const [orders] = await pool.query('SELECT id, total_harga FROM orders WHERE id = ?', [orderId]);
     if (orders.length === 0) return res.status(404).json({ success: false, message: 'Order tidak ditemukan' });
 
     const [existing] = await pool.query('SELECT id_payments FROM payments WHERE id_order = ?', [orderId]);
 
     let paymentId;
     if (existing.length > 0) {
-      await pool.query("UPDATE payments SET payment_method = ?, status = 'pending' WHERE id_order = ?", [paymentMethod, orderId]);
+      await pool.query("UPDATE payments SET metode = ?, status = 'pending' WHERE id_order = ?", [paymentMethod, orderId]);
       paymentId = existing[0].id_payments;
     } else {
       const [result] = await pool.query(
-        'INSERT INTO payments (id_order, payment_method, status, total) VALUES (?, ?, ?, ?)',
-        [orderId, paymentMethod, 'pending', orders[0].total]
+        'INSERT INTO payments (id_order, metode, status) VALUES (?, ?, ?)',
+        [orderId, paymentMethod, 'pending']
       );
       paymentId = result.insertId;
     }
@@ -39,7 +39,18 @@ export const getPaymentByOrderId = async (req, res) => {
     const { orderId } = req.params;
     const [payments] = await pool.query('SELECT * FROM payments WHERE id_order = ?', [orderId]);
     if (payments.length === 0) return res.status(404).json({ success: false, message: 'Data pembayaran tidak ditemukan' });
-    return res.status(200).json({ success: true, message: 'Detail pembayaran berhasil diambil', data: payments[0] });
+
+    const p = payments[0];
+    const formatted = {
+      id_payments: p.id_payments,
+      id_order: p.id_order,
+      payment_method: p.metode,
+      status: p.status === 'sukses' ? 'verified' : (p.status === 'gagal' ? 'rejected' : 'pending'),
+      proof_image: p.bukti_pembayaran,
+      paid_at: p.paid_at
+    };
+
+    return res.status(200).json({ success: true, message: 'Detail pembayaran berhasil diambil', data: formatted });
   } catch (error) {
     console.error('GetPaymentByOrderId error:', error);
     return res.status(500).json({ success: false, message: 'Terjadi kesalahan server', error: error.message });
@@ -58,14 +69,14 @@ export const uploadProof = async (req, res) => {
 
     const [existing] = await pool.query('SELECT id_payments FROM payments WHERE id_order = ?', [orderId]);
     if (existing.length === 0) {
-      const [order] = await pool.query('SELECT id, total FROM orders WHERE id = ?', [orderId]);
+      const [order] = await pool.query('SELECT id FROM orders WHERE id = ?', [orderId]);
       if (order.length === 0) return res.status(404).json({ success: false, message: 'Order tidak ditemukan' });
       await pool.query(
-        'INSERT INTO payments (id_order, payment_method, status, total, proof_image) VALUES (?, ?, ?, ?, ?)',
-        [orderId, 'transfer', 'pending', order[0].total, proofImage]
+        'INSERT INTO payments (id_order, metode, status, bukti_pembayaran) VALUES (?, ?, ?, ?)',
+        [orderId, 'transfer', 'pending', proofImage]
       );
     } else {
-      await pool.query('UPDATE payments SET proof_image = ?, status = ? WHERE id_order = ?', [proofImage, 'pending', orderId]);
+      await pool.query('UPDATE payments SET bukti_pembayaran = ?, status = ? WHERE id_order = ?', [proofImage, 'pending', orderId]);
     }
 
     return res.status(200).json({ success: true, message: 'Bukti pembayaran berhasil diupload', data: { orderId, proofImage } });
@@ -82,7 +93,7 @@ export const verifyPayment = async (req, res) => {
     await connection.beginTransaction();
 
     const { orderId } = req.params;
-    const { status }  = req.body; // 'verified' atau 'rejected'
+    const { status }  = req.body; // 'verified' (sukses) atau 'rejected' (gagal)
 
     if (!status || !['verified', 'rejected'].includes(status)) {
       connection.release();
@@ -95,10 +106,14 @@ export const verifyPayment = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Pembayaran tidak ditemukan' });
     }
 
-    await connection.query('UPDATE payments SET status = ? WHERE id_order = ?', [status, orderId]);
+    const dbStatus = status === 'verified' ? 'sukses' : 'gagal';
+
+    await connection.query('UPDATE payments SET status = ? WHERE id_order = ?', [dbStatus, orderId]);
 
     if (status === 'verified') {
-      await connection.query("UPDATE orders SET status = 'paid' WHERE id = ?", [orderId]);
+      await connection.query("UPDATE orders SET status = 'dibayar' WHERE id = ?", [orderId]);
+    } else {
+      await connection.query("UPDATE orders SET status = 'ditolak' WHERE id = ?", [orderId]);
     }
 
     await connection.commit();
@@ -116,14 +131,25 @@ export const verifyPayment = async (req, res) => {
 export const getAllPaymentsAdmin = async (req, res) => {
   try {
     const [payments] = await pool.query(`
-      SELECT p.*, o.total as orderTotal, u.name as customer_name
+      SELECT p.*, o.total_harga as orderTotal, u.nama as customer_name
       FROM payments p
       LEFT JOIN orders o ON p.id_order = o.id
       LEFT JOIN users u ON o.user_id = u.id
-      ORDER BY p.created_at DESC
+      ORDER BY p.id_payments DESC
     `);
 
-    return res.status(200).json({ success: true, message: 'Daftar pembayaran berhasil diambil', data: payments });
+    const formatted = payments.map(p => ({
+      id_payments: p.id_payments,
+      id_order: p.id_order,
+      payment_method: p.metode,
+      status: p.status === 'sukses' ? 'verified' : (p.status === 'gagal' ? 'rejected' : 'pending'),
+      proof_image: p.bukti_pembayaran,
+      paid_at: p.paid_at,
+      orderTotal: parseFloat(p.orderTotal || 0),
+      customer_name: p.customer_name || 'Pembeli'
+    }));
+
+    return res.status(200).json({ success: true, message: 'Daftar pembayaran berhasil diambil', data: formatted });
   } catch (error) {
     console.error('GetAllPaymentsAdmin error:', error);
     return res.status(500).json({ success: false, message: 'Terjadi kesalahan server', error: error.message });
