@@ -205,6 +205,7 @@ const ALL_PRODUCTS = [
 
 const getResolvedSrc = (raw?: string) => {
   if (!raw) return '/placeholder.svg';
+  if (raw.startsWith('data:')) return raw;
   if (raw.startsWith('http://') || raw.startsWith('https://')) return raw;
   if (raw.startsWith('/')) return raw;
   return `/uploads/${raw}`;

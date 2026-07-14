@@ -53,6 +53,7 @@ const STATUS_LABEL: Record<string, string> = {
 
 const getResolvedSrc = (raw?: string) => {
   if (!raw) return 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=100&h=100&fit=crop';
+  if (raw.startsWith('data:')) return raw;
   if (raw.startsWith('http://') || raw.startsWith('https://')) return raw;
   if (raw.startsWith('/')) return raw;
   return `/uploads/${raw}`;
